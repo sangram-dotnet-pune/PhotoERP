@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { ReactNode, TextareaHTMLAttributes } from 'react';
 import clsx from 'clsx';
 
@@ -22,29 +23,49 @@ const Textarea = ({
   className,
   value,
   rows = 5,
+  id: providedId,
+  'aria-describedby': ariaDescribedBy,
   ...props
 }: TextareaProps) => {
+  const generatedId = useId();
+  const id = providedId || generatedId;
+  const errorId = `${id}-error`;
+  const helperId = `${id}-helper`;
+
   const characterCount =
     typeof value === 'string' ? value.length : 0;
 
+  const describedBy = [
+    error ? errorId : null,
+    helperText ? helperId : null,
+    ariaDescribedBy,
+  ]
+    .filter(Boolean)
+    .join(' ') || undefined;
+
   return (
     <div className="w-full">
-      {/* Label */}
       {label && (
-        <label className="mb-2 block text-sm font-medium text-slate-700">
+        <label
+          htmlFor={id}
+          className="mb-2 block text-sm font-medium text-slate-700"
+        >
           {label}
-
           {required && (
-            <span className="ml-1 text-red-500">*</span>
+            <span className="ml-1 text-red-500" aria-hidden="true">
+              *
+            </span>
           )}
         </label>
       )}
 
-      {/* Textarea */}
       <textarea
+        id={id}
         rows={rows}
         value={value}
         maxLength={maxLength}
+        aria-invalid={error ? 'true' : 'false'}
+        aria-describedby={describedBy}
         className={clsx(
           'w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 resize-none',
 
@@ -57,16 +78,20 @@ const Textarea = ({
         {...props}
       />
 
-      {/* Footer */}
       <div className="mt-2 flex items-center justify-between">
         <div>
           {error ? (
-            <p className="text-sm text-red-500">
+            <p
+              id={errorId}
+              className="text-sm text-red-500"
+              role="alert"
+              aria-live="polite"
+            >
               {error}
             </p>
           ) : (
             helperText && (
-              <p className="text-sm text-slate-500">
+              <p id={helperId} className="text-sm text-slate-500">
                 {helperText}
               </p>
             )

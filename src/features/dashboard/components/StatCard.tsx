@@ -1,4 +1,6 @@
 import { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+
 import Card from '../../../components/ui/Card';
 
 interface StatCardProps {
@@ -7,6 +9,7 @@ interface StatCardProps {
   subtitle?: string;
   icon: ReactNode;
   iconBg?: string;
+  to?: string;
 }
 
 const StatCard = ({
@@ -15,9 +18,17 @@ const StatCard = ({
   subtitle,
   icon,
   iconBg = 'bg-blue-100 text-blue-600',
+  to,
 }: StatCardProps) => {
-  return (
-    <Card hover>
+  const content = (
+    <Card
+      hover
+      className={
+        to
+          ? 'cursor-pointer transition-colors hover:border-blue-300'
+          : undefined
+      }
+    >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-slate-500">{title}</p>
@@ -40,6 +51,19 @@ const StatCard = ({
         </div>
       </div>
     </Card>
+  );
+
+  if (!to) {
+    return content;
+  }
+
+  return (
+    <Link
+      to={to}
+      className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+    >
+      {content}
+    </Link>
   );
 };
 

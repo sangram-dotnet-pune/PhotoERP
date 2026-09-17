@@ -7,6 +7,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
+  ariaLabel?: string;
 }
 
 const Button = ({
@@ -16,15 +17,21 @@ const Button = ({
   disabled = false,
   leftIcon,
   rightIcon,
+  ariaLabel,
   className,
   ...props
 }: ButtonProps) => {
+  const hasOnlyIcon = !children && (leftIcon || rightIcon);
+
+  const resolvedAriaLabel = ariaLabel ?? (hasOnlyIcon ? String(children) : undefined);
+
   return (
     <button
       disabled={disabled || loading}
+      aria-label={resolvedAriaLabel}
+      aria-busy={loading}
       className={clsx(
         'inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60',
-
         {
           'bg-blue-600 text-white hover:bg-blue-700':
             variant === 'primary',
@@ -38,15 +45,17 @@ const Button = ({
           'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100':
             variant === 'outline',
         },
-
         className,
       )}
       {...props}
     >
       {loading ? (
         <>
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          Loading...
+          <div
+            className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+            aria-hidden="true"
+          />
+          <span className="sr-only">Loading...</span>
         </>
       ) : (
         <>

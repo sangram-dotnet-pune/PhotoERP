@@ -1,7 +1,7 @@
 use tauri::AppHandle;
 
 use crate::{
-    models::revenue::RevenueSummary,
+    models::reports::RevenueSummary,
     services::revenue_service,
 };
 

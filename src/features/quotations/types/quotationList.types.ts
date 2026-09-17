@@ -14,4 +14,14 @@ export interface QuotationListItem {
   balance: number;
 
   status: string;
+
+  workflow_status: string;
+
+  paid: number;
+
+  venue: string;
+
+  city: string;
+
+  service_status: string;
 }

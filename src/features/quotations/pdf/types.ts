@@ -16,6 +16,7 @@ export interface PdfQuotation {
     eventTime: string;
     venue: string;
     city: string;
+    eventNotes: string;
   };
 
   services: {
@@ -32,8 +33,10 @@ export interface PdfQuotation {
   balance: number;
 
   studio: {
+    name: string;
     phone: string;
     email: string;
     website: string;
+    address: string;
   };
 }

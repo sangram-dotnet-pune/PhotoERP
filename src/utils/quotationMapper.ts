@@ -7,6 +7,9 @@ export const mapQuotationToDto = (
   return {
     id: data.id,
     quotation_number: data.quotationNo,
+    quotation_date: data.quotationDate,
+    status: data.status,
+    client_id: data.clientId,
 
     client: {
       name: data.client.name,
@@ -21,6 +24,7 @@ export const mapQuotationToDto = (
 
     venue: data.event.venue,
     city: data.event.city,
+    event_notes: data.event.eventNotes,
 
     subtotal: data.subtotal,
     discount: data.discount,
@@ -31,10 +35,11 @@ export const mapQuotationToDto = (
     notes: data.notes,
 
     services: data.services.map((service) => ({
+      id: service.id,
       service_name: service.serviceName,
-      quantity: 1,
+      quantity: service.quantity,
       price: service.price,
-      total: service.price,
+      total: service.quantity * service.price,
     })),
   };
 };
@@ -46,10 +51,12 @@ export const mapDtoToQuotationState = (
     id: dto.id,
     quotationNo: dto.quotation_number,
 
-    // Until you store quotation_date in the database
-    quotationDate: new Date()
-      .toISOString()
-      .split('T')[0],
+    quotationDate:
+      dto.quotation_date || new Date().toISOString().split('T')[0],
+
+    status: dto.status || 'Draft',
+
+    clientId: dto.client_id,
 
     client: {
       name: dto.client.name,
@@ -64,13 +71,13 @@ export const mapDtoToQuotationState = (
       eventTime: dto.event_time,
       venue: dto.venue,
       city: dto.city,
-      eventNotes: '',
+      eventNotes: dto.event_notes || '',
     },
 
     services: dto.services.map((service, index) => ({
-      id: index + 1,
+      id: service.id ?? index + 1,
       serviceName: service.service_name,
-      quantity: 1,
+      quantity: service.quantity || 1,
       price: service.price,
     })),
 

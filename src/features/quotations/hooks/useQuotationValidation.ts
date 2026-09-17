@@ -2,6 +2,17 @@ import { useCallback, useState } from 'react';
 
 import type { UseQuotationState } from '../types/quotation.types';
 import type { QuotationErrors, FieldTouched } from '../types/validation.types';
+import {
+  validateRequired,
+  validatePhone,
+  validateEmail,
+  validateSelect,
+  validateArrayLength,
+  validateNonNegativeNumber,
+  validateMaxValue,
+  validateDate,
+  validatePositiveNumber,
+} from '../../../utils/validation';
 
 const emptyErrors: QuotationErrors = {
   clientName: '',
@@ -14,16 +25,17 @@ const emptyErrors: QuotationErrors = {
   advanceExceeds: '',
 };
 
+const initialTouched: FieldTouched = {
+  name: false,
+  phone: false,
+  email: false,
+  eventType: false,
+  eventDate: false,
+};
+
 export const useQuotationValidation = () => {
   const [errors, setErrors] = useState<QuotationErrors>(emptyErrors);
-
-  const [touched, setTouched] = useState<FieldTouched>({
-    name: false,
-    phone: false,
-    email: false,
-    eventType: false,
-    eventDate: false,
-  });
+  const [touched, setTouched] = useState<FieldTouched>(initialTouched);
 
   const touchField = useCallback((field: keyof FieldTouched) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -32,38 +44,54 @@ export const useQuotationValidation = () => {
   const validate = useCallback((state: UseQuotationState): boolean => {
     const newErrors: QuotationErrors = { ...emptyErrors };
 
-    if (!state.client.name.trim()) {
-      newErrors.clientName = 'Client name is required';
+    const nameError = validateRequired(state.client.name, 'Client name');
+    if (nameError) newErrors.clientName = nameError;
+
+    const phoneError = validatePhone(state.client.phone);
+    if (phoneError) newErrors.clientPhone = phoneError;
+
+    const emailError = validateEmail(state.client.email);
+    if (emailError) newErrors.clientEmail = emailError;
+
+    const eventTypeError = validateSelect(state.event.eventType, 'Event type');
+    if (eventTypeError) newErrors.eventType = eventTypeError;
+
+    const eventDateError = validateDate(state.event.eventDate, 'Event date');
+    if (eventDateError) newErrors.eventDate = eventDateError;
+
+    const servicesError = validateArrayLength(state.services, 1, 'service');
+    if (servicesError) newErrors.noServices = servicesError;
+
+    for (const service of state.services) {
+      const nameError = validateSelect(service.serviceName, 'Service name');
+      if (nameError) {
+        newErrors.noServices = nameError;
+        break;
+      }
+      const qtyError = validatePositiveNumber(service.quantity, 'Quantity');
+      if (qtyError) {
+        newErrors.noServices = qtyError;
+        break;
+      }
+      const priceError = validateNonNegativeNumber(service.price, 'Price');
+      if (priceError) {
+        newErrors.noServices = priceError;
+        break;
+      }
     }
 
-    if (!state.client.phone.trim()) {
-      newErrors.clientPhone = 'Mobile number is required';
-    } else if (!/^\d{10}$/.test(state.client.phone.replace(/\D/g, ''))) {
-      newErrors.clientPhone = 'Enter a valid 10-digit mobile number';
+    const discountError = validateNonNegativeNumber(state.discount, 'Discount');
+    if (discountError) newErrors.discountExceeds = discountError;
+    else {
+      const maxDiscountError = validateMaxValue(state.discount, state.subtotal, 'Discount');
+      if (maxDiscountError) newErrors.discountExceeds = maxDiscountError;
     }
 
-    if (state.client.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.client.email)) {
-      newErrors.clientEmail = 'Enter a valid email address';
-    }
-
-    if (!state.event.eventType) {
-      newErrors.eventType = 'Event type is required';
-    }
-
-    if (!state.event.eventDate) {
-      newErrors.eventDate = 'Event date is required';
-    }
-
-    if (state.services.length === 0) {
-      newErrors.noServices = 'Add at least one service';
-    }
-
-    if (state.discount > state.subtotal) {
-      newErrors.discountExceeds = 'Discount cannot exceed subtotal';
-    }
-
-    if (state.advance > state.total) {
-      newErrors.advanceExceeds = 'Advance cannot exceed total';
+    const advanceError = validateNonNegativeNumber(state.advance, 'Advance');
+    if (advanceError) newErrors.advanceExceeds = advanceError;
+    else {
+      const maxAdvanceError = validateMaxValue(state.advance, state.total, 'Advance');
+      if (maxAdvanceError) newErrors.advanceExceeds = maxAdvanceError;
     }
 
     setErrors(newErrors);
@@ -80,40 +108,36 @@ export const useQuotationValidation = () => {
       setErrors((prev) => {
         const next = { ...prev };
         switch (field) {
-          case 'name':
-            next.clientName = !state.client.name.trim()
-              ? 'Client name is required'
-              : '';
-            break;
-          case 'phone': {
-            const phone = state.client.phone.replace(/\D/g, '');
-            if (!state.client.phone.trim()) {
-              next.clientPhone = 'Mobile number is required';
-            } else if (phone.length !== 10) {
-              next.clientPhone = 'Enter a valid 10-digit mobile number';
-            } else {
-              next.clientPhone = '';
-            }
+          case 'name': {
+            const error = validateRequired(state.client.name, 'Client name');
+            next.clientName = error || '';
             break;
           }
-          case 'email':
-            if (state.client.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.client.email)) {
-              next.clientEmail = 'Enter a valid email address';
-            } else {
-              next.clientEmail = '';
-            }
+          case 'phone': {
+            const error = validatePhone(state.client.phone);
+            next.clientPhone = error || '';
             break;
-          case 'eventType':
-            next.eventType = !state.event.eventType ? 'Event type is required' : '';
+          }
+          case 'email': {
+            const error = validateEmail(state.client.email);
+            next.clientEmail = error || '';
             break;
-          case 'eventDate':
-            next.eventDate = !state.event.eventDate ? 'Event date is required' : '';
+          }
+          case 'eventType': {
+            const error = validateSelect(state.event.eventType, 'Event type');
+            next.eventType = error || '';
             break;
+          }
+          case 'eventDate': {
+            const error = validateDate(state.event.eventDate, 'Event date');
+            next.eventDate = error || '';
+            break;
+          }
         }
         return next;
       });
     },
-    [],
+    []
   );
 
   return {

@@ -8,6 +8,7 @@ import Button from '../../../components/ui/Button';
 import Table, {
   TableColumn,
 } from '../../../components/ui/Table';
+import WorkflowBadge from '../../../components/ui/WorkflowBadge';
 
 import type { QuotationListItem } from '../types/quotationList.types';
 
@@ -20,11 +21,25 @@ interface QuotationTableProps {
   onDelete?: (id: number) => void;
 }
 
+const PaymentBadge = ({ status }: { status: string }) => (
+  <span
+    className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+      status === 'Paid'
+        ? 'bg-green-100 text-green-700'
+        : status === 'Partial'
+        ? 'bg-yellow-100 text-yellow-700'
+        : 'bg-red-100 text-red-700'
+    }`}
+  >
+    {status}
+  </span>
+);
+
 const QuotationTable = ({
   quotations,
   onView,
   onDelete,
-  onEdit
+  onEdit,
 }: QuotationTableProps) => {
   const columns: TableColumn<QuotationListItem>[] = [
     {
@@ -56,21 +71,14 @@ const QuotationTable = ({
         `₹${row.balance.toLocaleString()}`,
     },
     {
-      header: 'Status',
+      header: 'Payment',
       accessor: 'status',
-      render: (row) => (
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            row.status === 'Paid'
-              ? 'bg-green-100 text-green-700'
-              : row.status === 'Partial'
-              ? 'bg-yellow-100 text-yellow-700'
-              : 'bg-red-100 text-red-700'
-          }`}
-        >
-          {row.status}
-        </span>
-      ),
+      render: (row) => <PaymentBadge status={row.status} />,
+    },
+    {
+      header: 'Workflow',
+      accessor: 'workflow_status',
+      render: (row) => <WorkflowBadge status={row.workflow_status} />,
     },
     {
       header: 'Actions',

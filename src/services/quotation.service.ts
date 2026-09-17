@@ -24,6 +24,24 @@ async getQuotations() {
   );
 }
 
+/**
+ * All future events, nearest first.
+ */
+async getUpcomingEvents() {
+  return invoke<QuotationListItem[]>(
+    'get_upcoming_events'
+  );
+}
+
+/**
+ * Quotations with a remaining balance, largest balance first.
+ */
+async getPendingQuotations() {
+  return invoke<QuotationListItem[]>(
+    'get_pending_quotations'
+  );
+}
+
   /**
    * Get quotation by ID
    */
@@ -45,9 +63,10 @@ async getQuotation(id: number) {
 }
 
   /**
-   * Delete quotation
+   * Delete a quotation. Payments and services are removed with it; the
+   * client record is kept (clients are independent of quotations).
    */
-async deleteQuotation(id: number) {
+async deleteQuotation(id: number): Promise<void> {
   return invoke(
     'delete_quotation',
     { id }
@@ -59,6 +78,16 @@ async deleteQuotation(id: number) {
    */
   async generateQuotationNumber(): Promise<string> {
     return await invoke('generate_quotation_number');
+  }
+
+  /**
+   * Update the workflow status of a quotation
+   */
+  async updateStatus(id: number, status: string) {
+    return invoke('update_quotation_status', {
+      id,
+      status,
+    });
   }
 }
 

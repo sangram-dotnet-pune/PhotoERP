@@ -1,34 +1,25 @@
-use rusqlite::Result;
-
 use crate::{
     database::connection,
     models::{
         dashboard::DashboardStats,
-        quotation_list::QuotationListItem,
+        reports::StatusCount,
     },
+    services::quotation_list,
 };
 
-pub fn get_dashboard_stats(
-    app: tauri::AppHandle,
-) -> Result<DashboardStats, String> {
-
-    let conn = connection::get_connection(&app);
+pub fn get_dashboard_stats(app: tauri::AppHandle) -> Result<DashboardStats, String> {
+    let conn = connection::get_connection(&app)?;
 
     // -----------------------------------
     // Total Quotations
     // -----------------------------------
 
     let total_quotations: i64 = conn
-        .query_row(
-            "SELECT COUNT(*) FROM quotations",
-            [],
-            |row| row.get(0),
-        )
+        .query_row("SELECT COUNT(*) FROM quotations", [], |row| row.get(0))
         .map_err(|e| e.to_string())?;
 
     // -----------------------------------
-    // Revenue
-    // Revenue = SUM(all payments)
+    // Revenue = SUM of all payments received
     // -----------------------------------
 
     let total_revenue: f64 = conn
@@ -40,15 +31,19 @@ pub fn get_dashboard_stats(
         .map_err(|e| e.to_string())?;
 
     // -----------------------------------
-    // Pending Balance
-    // Pending = SUM(quotation.total - paid_amount)
+    // Pending Balance = SUM(max(total - paid, 0))
     // -----------------------------------
 
     let pending_balance: f64 = conn
         .query_row(
             "
             SELECT IFNULL(
-                SUM(quotations.total - IFNULL(paid_totals.paid, 0)),
+                SUM(
+                    MAX(
+                        quotations.total - IFNULL(paid_totals.paid, 0),
+                        0
+                    )
+                ),
                 0
             )
             FROM quotations
@@ -73,7 +68,9 @@ pub fn get_dashboard_stats(
             "
             SELECT COUNT(*)
             FROM quotations
-            WHERE date(event_date) >= date('now')
+            WHERE event_date IS NOT NULL
+              AND event_date <> ''
+              AND date(event_date) >= date('now')
             ",
             [],
             |row| row.get(0),
@@ -81,114 +78,71 @@ pub fn get_dashboard_stats(
         .map_err(|e| e.to_string())?;
 
     // -----------------------------------
-    // Recent Quotations
+    // Workflow Status Summary
     // -----------------------------------
 
-    let mut stmt = conn
+    let mut status_stmt = conn
         .prepare(
             "
-            SELECT
-                quotations.id,
-                quotations.quotation_number,
-                clients.name,
-                quotations.event_type,
-                quotations.event_date,
-                quotations.total,
-                quotations.balance,
-                quotations.status
+            SELECT IFNULL(status, 'Draft') AS status, COUNT(*) AS count
             FROM quotations
-
-            INNER JOIN clients
-                ON quotations.client_id = clients.id
-
-            ORDER BY quotations.id DESC
-
-            LIMIT 5
+            GROUP BY IFNULL(status, 'Draft')
+            ORDER BY CASE IFNULL(status, 'Draft')
+                WHEN 'Draft' THEN 1
+                WHEN 'Sent' THEN 2
+                WHEN 'Confirmed' THEN 3
+                WHEN 'Completed' THEN 4
+                WHEN 'Cancelled' THEN 5
+                ELSE 6
+            END
             ",
         )
         .map_err(|e| e.to_string())?;
 
-    let rows = stmt
+    let status_rows = status_stmt
         .query_map([], |row| {
-            Ok(QuotationListItem {
-                id: row.get(0)?,
-                quotation_number: row.get(1)?,
-                client_name: row.get(2)?,
-                event_type: row.get(3)?,
-                event_date: row.get(4)?,
-                total: row.get(5)?,
-                balance: row.get(6)?,
-                status: row.get(7)?,
+            Ok(StatusCount {
+                status: row.get(0)?,
+                count: row.get(1)?,
             })
         })
         .map_err(|e| e.to_string())?;
 
-    let mut recent_quotations = Vec::new();
+    let mut workflow_summary = Vec::new();
 
-    for row in rows {
-        recent_quotations.push(
-            row.map_err(|e| e.to_string())?,
-        );
+    for row in status_rows {
+        workflow_summary.push(row.map_err(|e| e.to_string())?);
     }
 
+    // -----------------------------------
+    // Recent Quotations
+    // -----------------------------------
 
+    let recent_quotations = quotation_list::load_quotation_list(
+        &conn,
+        "",
+        "q.id DESC",
+        Some(6),
+    )?;
 
+    // -----------------------------------
+    // Upcoming Events List
+    // -----------------------------------
 
-    let mut stmt = conn.prepare(
-    "
-    SELECT
-        quotations.id,
-        quotations.quotation_number,
-        clients.name,
-        quotations.event_type,
-        quotations.event_date,
-        quotations.total,
-        quotations.balance,
-        quotations.status
-
-    FROM quotations
-
-    INNER JOIN clients
-        ON quotations.client_id = clients.id
-
-    WHERE date(quotations.event_date) >= date('now')
-
-    ORDER BY quotations.event_date ASC
-
-    LIMIT 5
-    ",
-)
-.map_err(|e| e.to_string())?;
-
-let rows = stmt.query_map([], |row| {
-    Ok(QuotationListItem {
-        id: row.get(0)?,
-        quotation_number: row.get(1)?,
-        client_name: row.get(2)?,
-        event_type: row.get(3)?,
-        event_date: row.get(4)?,
-        total: row.get(5)?,
-        balance: row.get(6)?,
-        status: row.get(7)?,
-    })
-})
-.map_err(|e| e.to_string())?;
-
-let mut upcoming_event_list = Vec::new();
-
-for item in rows {
-    upcoming_event_list.push(
-        item.map_err(|e| e.to_string())?
-    );
-}
+    let upcoming_event_list = quotation_list::load_quotation_list(
+        &conn,
+        "q.event_date IS NOT NULL AND q.event_date <> '' AND date(q.event_date) >= date('now')",
+        "q.event_date ASC",
+        Some(6),
+    )?;
 
     Ok(DashboardStats {
         total_quotations,
         total_revenue,
         pending_balance,
         upcoming_events,
+        workflow_summary,
         recent_quotations,
-
         upcoming_event_list,
     })
 }

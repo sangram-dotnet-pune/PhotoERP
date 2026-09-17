@@ -11,11 +11,14 @@ import type { PdfQuotation } from '../pdf/types';
 import { mapQuotationToPdf } from '../../../utils/pdfMapper';
 
 import generateQuotationPdf from '../pdf/generateQuotationPdf';
+import { useStudioSettings } from '../../../hooks/useStudioSettings';
+import { toastError, toastSuccess } from '../../../utils/toast';
 
 const PdfPreviewPage = () => {
   const { id } = useParams();
 
   const pdfRef = useRef<HTMLDivElement>(null);
+  const studio = useStudioSettings();
 
   const [quotation, setQuotation] =
     useState<PdfQuotation>();
@@ -25,6 +28,7 @@ const PdfPreviewPage = () => {
 
   useEffect(() => {
     loadQuotation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadQuotation = async () => {
@@ -35,8 +39,12 @@ const PdfPreviewPage = () => {
         );
 
       setQuotation(
-        mapQuotationToPdf(dto),
+        mapQuotationToPdf(dto, studio),
       );
+    } catch (error) {
+      console.error(error);
+
+      toastError('Failed to load quotation');
     } finally {
       setLoading(false);
     }
@@ -47,10 +55,18 @@ const PdfPreviewPage = () => {
       return;
     }
 
-    await generateQuotationPdf({
-      element: pdfRef.current,
-      fileName: quotation.quotationNo,
-    });
+    try {
+      await generateQuotationPdf({
+        element: pdfRef.current,
+        fileName: quotation.quotationNo,
+      });
+
+      toastSuccess('PDF generated successfully');
+    } catch (error) {
+      console.error(error);
+
+      toastError('Failed to generate PDF');
+    }
   };
 
   if (loading) {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type {
   ClientDetails,
@@ -6,30 +6,32 @@ import type {
   ServiceItem,
   UseQuotationState,
 } from '../types/quotation.types';
-import { generateQuotationNumber } from '../../../utils/generateQuotationNumber';
 import { QuotationDto } from '../../../types/database';
 import { mapDtoToQuotationState } from '../../../utils/quotationMapper';
+import { quotationService } from '../../../services/quotation.service';
 
 const num = (v: number | string) => {
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 ? n : 0;
 };
 
+export type UseQuotationReturn = ReturnType<typeof useQuotation>;
+
 export const useQuotation = () => {
   // ==============================
   // Quotation Info
   // ==============================
 
-  const [quotationNo, setQuotationNo] = useState(
-    generateQuotationNumber(),
-  );
+  const [quotationNo, setQuotationNo] = useState('');
 
   const [quotationId, setQuotationId] =
     useState<number | undefined>();
 
   const [quotationDate, setQuotationDate] = useState(
-    new Date().toISOString().split('T')[0],
+    new Date().toLocaleDateString('en-CA'),
   );
+
+  const [status, setStatus] = useState('Draft');
 
   // ==============================
   // Client
@@ -41,6 +43,10 @@ export const useQuotation = () => {
     email: '',
     address: '',
   });
+
+  /// When set, the quotation is linked to an existing client record instead
+  /// of creating a new one on save.
+  const [clientId, setClientId] = useState<number | undefined>();
 
   // ==============================
   // Event
@@ -76,6 +82,17 @@ export const useQuotation = () => {
   const [notes, setNotes] = useState('');
 
   // ==============================
+  // Fetch the next sequential quotation number on mount for new quotations.
+  // ==============================
+
+  useEffect(() => {
+    quotationService
+      .generateQuotationNumber()
+      .then((n) => setQuotationNo(n))
+      .catch(() => setQuotationNo('QT-'));
+  }, []);
+
+  // ==============================
   // Client Update
   // ==============================
 
@@ -87,6 +104,35 @@ export const useQuotation = () => {
       ...prev,
       [field]: value,
     }));
+  };
+
+  // ==============================
+  // Select an Existing Client
+  // ==============================
+
+  const selectClient = (details: {
+    id?: number;
+    name: string;
+    phone: string;
+    email: string;
+    address: string;
+  }) => {
+    setClientId(details.id);
+    setClient({
+      name: details.name,
+      phone: details.phone,
+      email: details.email,
+      address: details.address,
+    });
+  };
+
+  // ==============================
+  // Create a New Client
+  // ==============================
+
+  const clearClient = () => {
+    setClientId(undefined);
+    setClient({ name: '', phone: '', email: '', address: '' });
   };
 
   // ==============================
@@ -156,7 +202,7 @@ export const useQuotation = () => {
 
   const subtotal = useMemo(() => {
     return services.reduce(
-      (sum, item) => sum + num(item.price),
+      (sum, item) => sum + num(item.price) * num(item.quantity),
       0,
     );
   }, [services]);
@@ -195,8 +241,9 @@ export const useQuotation = () => {
     setQuotationNo(state.quotationNo);
     setQuotationDate(state.quotationDate);
     setQuotationId(state.id);
+    setClientId(state.clientId);
     setClient(state.client);
-
+    setStatus(state.status);
     setEvent(state.event);
 
     setServices(state.services);
@@ -216,6 +263,10 @@ export const useQuotation = () => {
     id: quotationId,
     quotationNo,
     quotationDate,
+
+    status,
+
+    clientId,
 
     client,
     event,
@@ -239,6 +290,9 @@ export const useQuotation = () => {
     // Individual state
     quotationNo,
     quotationDate,
+    status,
+
+    clientId,
 
     client,
     event,
@@ -256,6 +310,7 @@ export const useQuotation = () => {
     // Setters
 
     setQuotationDate,
+    setStatus,
 
     setNotes,
     setDiscount: handleSetDiscount,
@@ -264,6 +319,9 @@ export const useQuotation = () => {
     // Methods
     updateClient,
     updateEvent,
+
+    selectClient,
+    clearClient,
 
     addService,
     removeService,

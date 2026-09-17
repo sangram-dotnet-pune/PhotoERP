@@ -4,6 +4,8 @@ import {
   FileText,
   Users,
   Settings,
+  BarChart3,
+  FilePlus,
 
 } from 'lucide-react';
 
@@ -21,15 +23,20 @@ export const navigationItems = [
     icon: FileText,
   },
   {
+    title: 'New Quotation',
+    path: ROUTES.NEW_QUOTATION,
+    icon: FilePlus,
+  },
+  {
     title: 'Clients',
     path: ROUTES.CLIENTS,
     icon: Users,
   },
-  // {
-  //   title: 'New Quotation',
-  //   path: ROUTES.NEW_QUOTATION,
-  //   icon: FilePlus,
-  // },
+  {
+    title: 'Reports',
+    path: ROUTES.REPORTS,
+    icon: BarChart3,
+  },
   {
     title: 'Settings',
     path: ROUTES.SETTINGS,

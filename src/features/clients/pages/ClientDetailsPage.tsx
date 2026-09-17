@@ -1,6 +1,5 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
-  ArrowLeft,
   CheckCircle2,
   Clock,
   Plus,
@@ -12,7 +11,8 @@ import { useEffect, useState } from 'react';
 import Button from '../../../components/ui/Button';
 import Card from '../../../components/ui/Card';
 import StatusBadge from '../../../components/ui/StatusBadge';
-import Loader from '../../../components/ui/Loader';
+import LoadingState from '../../../components/ui/LoadingState';
+import BackNavigation from '../../../components/ui/BackNavigation';
 import {
   toastSuccess,
   toastError,
@@ -32,7 +32,6 @@ import PaymentHistory from '../components/PaymentHistory';
 
 const ClientDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
 
   const [data, setData] = useState<ClientDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,15 +40,10 @@ const ClientDetailsPage = () => {
   const [paymentsByQuote, setPaymentsByQuote] = useState<
     Record<number, QuotationPayments>
   >({});
-  const [expandedQuote, setExpandedQuote] = useState<number | null>(
-    null,
-  );
+  const [expandedQuote, setExpandedQuote] = useState<number | null>(null);
 
-  const [addModalQuote, setAddModalQuote] = useState<number | null>(
-    null,
-  );
-  const [editingPayment, setEditingPayment] =
-    useState<Payment | null>(null);
+  const [addModalQuote, setAddModalQuote] = useState<number | null>(null);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
 
   useEffect(() => {
     if (id) loadDetails(Number(id));
@@ -70,9 +64,7 @@ const ClientDetailsPage = () => {
 
   const loadPayments = async (quotationId: number) => {
     try {
-      const qp = await paymentService.getPaymentsByQuotation(
-        quotationId,
-      );
+      const qp = await paymentService.getPaymentsByQuotation(quotationId);
       setPaymentsByQuote((prev) => ({
         ...prev,
         [quotationId]: qp,
@@ -87,8 +79,7 @@ const ClientDetailsPage = () => {
     serviceId: number,
     currentStatus: string,
   ) => {
-    const newStatus =
-      currentStatus === 'Completed' ? 'Pending' : 'Completed';
+    const newStatus = currentStatus === 'Completed' ? 'Pending' : 'Completed';
 
     const toastId = toastLoading('Updating status...');
 
@@ -149,21 +140,18 @@ const ClientDetailsPage = () => {
   };
 
   if (loading) {
-    return <Loader text="Loading client details..." />;
+    return <LoadingState text="Loading client details..." />;
   }
 
   if (!data) {
     return (
       <Card>
         <p className="text-slate-500">Client not found.</p>
-        <Button
-          variant="outline"
+        <BackNavigation
+          fallbackPath="/clients"
+          label="Back to Clients"
           className="mt-4"
-          onClick={() => navigate('/clients')}
-        >
-          <ArrowLeft size={16} />
-          Back to Clients
-        </Button>
+        />
       </Card>
     );
   }
@@ -178,16 +166,11 @@ const ClientDetailsPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header / Back */}
-      <Button
-        variant="outline"
-        onClick={() => navigate('/clients')}
-      >
-        <ArrowLeft size={16} />
-        Back to Clients
-      </Button>
+      <BackNavigation
+        fallbackPath="/clients"
+        label="Back to Clients"
+      />
 
-      {/* Client Info */}
       <Card>
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div className="flex items-center gap-4">
@@ -195,9 +178,7 @@ const ClientDetailsPage = () => {
               {client.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">
-                {client.name}
-              </h1>
+              <h1 className="text-2xl font-bold text-slate-900">{client.name}</h1>
               <div className="mt-1 space-y-1 text-sm text-slate-500">
                 {client.phone && <p>{client.phone}</p>}
                 {client.email && <p>{client.email}</p>}
@@ -207,20 +188,17 @@ const ClientDetailsPage = () => {
           </div>
 
           <div className="flex flex-col items-start gap-1 md:items-end">
-            <span className="text-sm text-slate-500">
-              Overall Delivery
-            </span>
+            <span className="text-sm text-slate-500">Overall Delivery</span>
             <StatusBadge status={overall_status} />
           </div>
         </div>
       </Card>
 
-      {/* Financial Summary */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="!p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-              <IndianRupee size={20} />
+              <IndianRupee size={20} aria-hidden="true" />
             </div>
             <div>
               <p className="text-sm text-slate-500">Total Business</p>
@@ -234,7 +212,7 @@ const ClientDetailsPage = () => {
         <Card className="!p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 text-green-600">
-              <CheckCircle2 size={20} />
+              <CheckCircle2 size={20} aria-hidden="true" />
             </div>
             <div>
               <p className="text-sm text-slate-500">Amount Paid</p>
@@ -248,7 +226,7 @@ const ClientDetailsPage = () => {
         <Card className="!p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 text-red-600">
-              <Clock size={20} />
+              <Clock size={20} aria-hidden="true" />
             </div>
             <div>
               <p className="text-sm text-slate-500">Pending Amount</p>
@@ -263,19 +241,17 @@ const ClientDetailsPage = () => {
       <Card className="!p-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500">
-              Client Payment Status
-            </span>
+            <span className="text-sm text-slate-500">Client Payment Status</span>
           </div>
           <PaymentStatusBadge status={financial.payment_status} />
         </div>
       </Card>
 
-      {/* Events */}
       {events.length === 0 ? (
         <Card>
           <p className="text-slate-500">
-            No events found for this client.
+            No quotations/events yet. This client has no quotes, which is
+            perfectly valid.
           </p>
         </Card>
       ) : (
@@ -287,12 +263,8 @@ const ClientDetailsPage = () => {
             onToggleStatus={handleToggleStatus}
             expanded={expandedQuote === event.quotation_id}
             onToggleExpand={() => toggleExpand(event.quotation_id)}
-            payments={
-              paymentsByQuote[event.quotation_id]?.payments ?? []
-            }
-            onAddPayment={() =>
-              setAddModalQuote(event.quotation_id)
-            }
+            payments={paymentsByQuote[event.quotation_id]?.payments ?? []}
+            onAddPayment={() => setAddModalQuote(event.quotation_id)}
             onEditPayment={(p) => setEditingPayment(p)}
             onDeletePayment={handleDeletePayment}
             formatCurrency={formatCurrency}
@@ -300,7 +272,6 @@ const ClientDetailsPage = () => {
         ))
       )}
 
-      {/* Add Payment Modal */}
       <PaymentModal
         open={addModalQuote !== null}
         quotationId={addModalQuote ?? 0}
@@ -314,7 +285,6 @@ const ClientDetailsPage = () => {
         }}
       />
 
-      {/* Edit Payment Modal */}
       <PaymentModal
         open={editingPayment !== null}
         quotationId={editingPayment?.quotation_id ?? 0}
@@ -378,33 +348,26 @@ const ClientEventCard = ({
             <StatusBadge status={event.overall_status} />
           </div>
           <p className="mt-1 text-sm text-slate-500">
-            {event.event_type &&
-              `${event.event_type} • `}
+            {event.event_type && `${event.event_type} • `}
             {event.event_date || 'No date'}
             {event.event_time && ` • ${event.event_time}`}
           </p>
           {(event.venue || event.city) && (
             <p className="text-xs text-slate-400">
-              {[event.venue, event.city]
-                .filter(Boolean)
-                .join(', ')}
+              {[event.venue, event.city].filter(Boolean).join(', ')}
             </p>
           )}
         </div>
 
         <div className="flex items-center gap-2">
           <PaymentStatusBadge status={event.payment_status} />
-          <Button
-            variant="outline"
-            onClick={onAddPayment}
-          >
-            <Plus size={16} />
+          <Button variant="outline" onClick={onAddPayment}>
+            <Plus size={16} aria-hidden="true" />
             Add Payment
           </Button>
         </div>
       </div>
 
-      {/* Event financial quick stats */}
       <div className="mb-4 grid grid-cols-3 gap-3 rounded-xl bg-slate-50 p-4">
         <div>
           <p className="text-xs text-slate-500">Total</p>
@@ -427,7 +390,7 @@ const ClientEventCard = ({
       </div>
 
       <div className="overflow-hidden rounded-lg border border-slate-200">
-        <table className="min-w-full">
+        <table className="min-w-full" role="grid">
           <thead className="bg-slate-50">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">
@@ -453,20 +416,14 @@ const ClientEventCard = ({
           <tbody>
             {event.services.map((service) => {
               const isUpdating = updatingId === service.id;
-              const isCompleted =
-                service.status === 'Completed';
+              const isCompleted = service.status === 'Completed';
 
               return (
-                <tr
-                  key={service.id}
-                  className="border-t hover:bg-slate-50"
-                >
+                <tr key={service.id} className="border-t hover:bg-slate-50">
                   <td className="px-4 py-3 text-sm font-medium text-slate-900">
                     {service.service_name}
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-700">
-                    {service.quantity}
-                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-700">{service.quantity}</td>
                   <td className="px-4 py-3 text-sm text-slate-700">
                     ₹{service.price.toLocaleString()}
                   </td>
@@ -480,21 +437,19 @@ const ClientEventCard = ({
                     <Button
                       variant={isCompleted ? 'secondary' : 'primary'}
                       loading={isUpdating}
-                      onClick={() =>
-                        onToggleStatus(
-                          service.id,
-                          service.status,
-                        )
+                      onClick={() => onToggleStatus(service.id, service.status)}
+                      aria-label={
+                        isCompleted
+                          ? `Mark ${service.service_name} as pending`
+                          : `Mark ${service.service_name} as completed`
                       }
                     >
                       {isCompleted ? (
-                        <Clock size={16} />
+                        <Clock size={16} aria-hidden="true" />
                       ) : (
-                        <CheckCircle2 size={16} />
+                        <CheckCircle2 size={16} aria-hidden="true" />
                       )}
-                      {isCompleted
-                        ? 'Mark Pending'
-                        : 'Mark Completed'}
+                      {isCompleted ? 'Mark Pending' : 'Mark Completed'}
                     </Button>
                   </td>
                 </tr>
@@ -504,17 +459,14 @@ const ClientEventCard = ({
         </table>
       </div>
 
-      {/* Payment History toggle */}
       <div className="mt-4">
         <button
           type="button"
           onClick={onToggleExpand}
           className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-50"
         >
-          <CreditCard size={16} />
-          {expanded
-            ? 'Hide Payment History'
-            : 'View Payment History'}
+          <CreditCard size={16} aria-hidden="true" />
+          {expanded ? 'Hide Payment History' : 'View Payment History'}
         </button>
 
         {expanded && (

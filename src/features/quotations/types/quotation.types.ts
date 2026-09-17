@@ -46,6 +46,10 @@ export interface UseQuotationState {
 
   quotationDate: string;
 
+  status: string;
+
+  clientId?: number;
+
   client: ClientDetails;
 
   event: EventDetails;

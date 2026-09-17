@@ -1,4 +1,4 @@
-import { Eye } from 'lucide-react';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 
 import Button from '../../../components/ui/Button';
 import Table, {
@@ -11,11 +11,15 @@ import type { ClientListItem } from '../types/client.types';
 interface ClientTableProps {
   clients: ClientListItem[];
   onView?: (id: number) => void;
+  onEdit?: (client: ClientListItem) => void;
+  onDelete?: (client: ClientListItem) => void;
 }
 
 const ClientTable = ({
   clients,
   onView,
+  onEdit,
+  onDelete,
 }: ClientTableProps) => {
   const columns: TableColumn<ClientListItem>[] = [
     {
@@ -59,12 +63,28 @@ const ClientTable = ({
       header: 'Actions',
       accessor: 'id',
       render: (row) => (
-        <Button
-          variant="outline"
-          onClick={() => onView?.(row.id)}
-        >
-          <Eye size={16} />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => onView?.(row.id)}
+          >
+            <Eye size={16} />
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => onEdit?.(row)}
+          >
+            <Pencil size={16} />
+          </Button>
+
+          <Button
+            variant="danger"
+            onClick={() => onDelete?.(row)}
+          >
+            <Trash2 size={16} />
+          </Button>
+        </div>
       ),
     },
   ];

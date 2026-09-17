@@ -207,7 +207,7 @@ pub fn restore_database(
         "Unable to restore backup.".to_string()
     })?;
 
-    migrations::run(&restored);
+    migrations::run(&restored)?;
 
     Ok("Backup restored successfully".to_string())
 }

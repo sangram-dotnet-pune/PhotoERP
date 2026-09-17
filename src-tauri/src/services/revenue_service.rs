@@ -1,45 +1,33 @@
-use rusqlite::Result;
 use tauri::AppHandle;
 
 use crate::{
     database::connection,
-    models::revenue::RevenueSummary,
+    models::reports::RevenueSummary,
 };
 
-pub fn get_monthly_revenue(
-    app: AppHandle,
-) -> Result<Vec<RevenueSummary>, String> {
+/// Revenue grouped by calendar month based on actual payments received.
+pub fn get_monthly_revenue(app: AppHandle) -> Result<Vec<RevenueSummary>, String> {
+    let conn = connection::get_connection(&app)?;
 
-    let conn = connection::get_connection(&app);
-
-    
-
-
-    let mut stmt = conn.prepare(
-        "
-        SELECT
-            strftime('%m', event_date) AS month_number,
-            SUM(total) AS amount
-
-        FROM quotations
-
-        WHERE
-            event_date IS NOT NULL
-            AND event_date <> ''
-            AND strftime('%m', event_date) IS NOT NULL
-
-        GROUP BY month_number
-
-        ORDER BY month_number DESC
-
-        LIMIT 6
-        ",
-    )
-    .map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "
+            SELECT
+                strftime('%m', payment_date) AS month_number,
+                IFNULL(SUM(amount), 0) AS amount
+            FROM payments
+            WHERE
+                payment_date IS NOT NULL
+                AND payment_date <> ''
+                AND strftime('%m', payment_date) IS NOT NULL
+            GROUP BY month_number
+            ORDER BY month_number ASC
+            ",
+        )
+        .map_err(|e| e.to_string())?;
 
     let rows = stmt
         .query_map([], |row| {
-
             let month_number: String = row.get(0)?;
 
             let month = match month_number.as_str() {
@@ -70,8 +58,6 @@ pub fn get_monthly_revenue(
     for row in rows {
         revenue.push(row.map_err(|e| e.to_string())?);
     }
-
-    revenue.reverse();
 
     Ok(revenue)
 }

@@ -4,4 +4,5 @@ pub mod payment;
 pub mod quotation;
 pub mod quotation_list;
 pub mod dashboard;
-pub mod revenue;
+pub mod reports;
+pub mod settings;

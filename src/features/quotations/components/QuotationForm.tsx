@@ -7,9 +7,11 @@ import QuotationHeader from './QuotationHeader';
 import ServicesTable from './ServicesTable';
 
 import type { QuotationErrors, FieldTouched } from '../types/validation.types';
+import type { UseQuotationReturn } from '../hooks/useQuotation';
+import type { UseQuotationState } from '../types/quotation.types';
 
 interface QuotationFormProps {
-  quotation: any;
+  quotation: UseQuotationReturn;
   mode: 'create' | 'edit' | 'view';
   loading: boolean;
 
@@ -22,7 +24,7 @@ interface QuotationFormProps {
   errors?: QuotationErrors;
   touched?: FieldTouched;
   onTouchField?: (field: keyof FieldTouched) => void;
-  onValidateField?: (field: keyof FieldTouched, state: any) => void;
+  onValidateField?: (field: keyof FieldTouched, state: UseQuotationState) => void;
 }
 
 const QuotationForm = ({
@@ -49,13 +51,17 @@ const QuotationForm = ({
         quotationNo={quotation.quotationNo}
         quotationDate={quotation.quotationDate}
         disabled={readOnly}
-        validTill="06-Aug-2026"
       />
 
       <ClientDetailsForm
         client={quotation.client}
         onChange={quotation.updateClient}
         readOnly={readOnly}
+        showClientSelector={mode === 'create'}
+        selectedClientId={quotation.clientId}
+        selectedClientName={quotation.client.name}
+        onSelectClient={quotation.selectClient}
+        onClearClient={quotation.clearClient}
         error={isValidating ? {
           name: errors?.clientName || '',
           phone: errors?.clientPhone || '',

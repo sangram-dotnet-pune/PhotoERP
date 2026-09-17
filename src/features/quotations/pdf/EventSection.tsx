@@ -1,5 +1,6 @@
 import {
   Calendar,
+  Clock3,
   MapPin,
   Star,
 } from 'lucide-react';
@@ -11,6 +12,7 @@ interface EventSectionProps {
     eventTime: string;
     venue: string;
     city: string;
+    eventNotes: string;
   };
 }
 
@@ -78,18 +80,28 @@ const EventSection = ({
   value={event.eventDate}
 />
 
+{event.eventTime && (
+  <Row
+    icon={<Clock3 />}
+    label="Event Time"
+    value={event.eventTime}
+  />
+)}
+
 <Row
   icon={<MapPin />}
   label="Venue"
   value={`${event.venue}, ${event.city}`}
 />
 
+{event.eventNotes && (
+  <Row
+    icon={<Star />}
+    label="Notes"
+    value={event.eventNotes}
+  />
+)}
 
-      {/* <Row
-        icon={<Clock3 size={16} />}
-        label="Coverage"
-        value={event.eventTime}
-      /> */}
 
     </div>
 

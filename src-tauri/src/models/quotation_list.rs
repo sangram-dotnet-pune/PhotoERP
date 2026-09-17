@@ -10,4 +10,9 @@ pub struct QuotationListItem {
     pub total: f64,
     pub balance: f64,
     pub status: String,
+    pub workflow_status: String,
+    pub paid: f64,
+    pub venue: String,
+    pub city: String,
+    pub service_status: String,
 }

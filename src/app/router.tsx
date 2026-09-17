@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createHashRouter } from 'react-router-dom';
 
 import AppLayout from '../components/layout/AppLayout';
 
@@ -7,6 +7,11 @@ import QuotationListPage from '../features/quotations/pages/QuotationListPage';
 import ClientsPage from '../features/clients/pages/ClientsPage';
 import ClientDetailsPage from '../features/clients/pages/ClientDetailsPage';
 import DataManagementPage from '../features/settings/pages/DataManagementPage';
+import ReportsPage from '../features/reports/pages/ReportsPage';
+import RevenuePage from '../features/reports/pages/RevenuePage';
+import PendingPaymentsPage from '../features/reports/pages/PendingPaymentsPage';
+import UpcomingEventsPage from '../features/events/pages/UpcomingEventsPage';
+import NotFoundPage from '../pages/NotFoundPage';
 
 import { ROUTES } from '../constants/routes';
 import NewQuotationPage from '../features/quotations/pages/NewQuotationPage';
@@ -14,7 +19,7 @@ import EditQuotationPage from '../features/quotations/pages/EditQuotationPage';
 import ViewQuotationPage from '../features/quotations/pages/ViewQuotationPage';
 import PdfPreviewPage from '../features/quotations/pages/PdfPreviewPage';
 
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: ROUTES.DASHBOARD,
     element: <AppLayout />,
@@ -40,24 +45,41 @@ export const router = createBrowserRouter([
         element: <DataManagementPage />,
       },
       {
+        path: ROUTES.REPORTS.substring(1),
+        element: <ReportsPage />,
+      },
+      {
+        path: ROUTES.REPORTS_REVENUE.substring(1),
+        element: <RevenuePage />,
+      },
+      {
+        path: ROUTES.REPORTS_PENDING.substring(1),
+        element: <PendingPaymentsPage />,
+      },
+      {
+        path: ROUTES.UPCOMING_EVENTS.substring(1),
+        element: <UpcomingEventsPage />,
+      },
+      {
         path: ROUTES.NEW_QUOTATION.substring(1),
         element: <NewQuotationPage />,
       },
-
       {
        path: 'quotations/:id',
        element: <ViewQuotationPage />,
-     },
+      },
       {
        path: 'quotations/edit/:id',
        element: <EditQuotationPage />,
       },
-
       {
-    path: '/quotation/:id/pdf',
-    element: <PdfPreviewPage />,
-       }
-
+        path: '/quotation/:id/pdf',
+        element: <PdfPreviewPage />,
+      },
+      {
+        path: ROUTES.NOT_FOUND.replace('/', ''),
+        element: <NotFoundPage />,
+      },
     ],
   },
 ]);

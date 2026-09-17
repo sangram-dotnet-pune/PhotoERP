@@ -14,6 +14,8 @@ export interface ClientDto {
 // ==============================
 
 export interface ServiceItemDto {
+  id?: number;
+
   service_name: string;
 
   quantity: number;
@@ -33,6 +35,10 @@ export interface QuotationDto {
   id?: number;
   quotation_number: string;
 
+  quotation_date?: string;
+
+  client_id?: number;
+
   client: ClientDto;
 
   event_type: string;
@@ -44,6 +50,8 @@ export interface QuotationDto {
   venue: string;
 
   city: string;
+
+  event_notes?: string;
 
   subtotal: number;
 
@@ -57,10 +65,10 @@ export interface QuotationDto {
 
   notes: string;
 
+  status?: string;
+
   services: ServiceItemDto[];
 }
-
-
 
 export interface Quotation extends QuotationDto {
   id: number;

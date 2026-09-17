@@ -2,9 +2,12 @@ import Card from '../../../components/ui/Card';
 import Input from '../../../components/ui/Input';
 import Textarea from '../../../components/ui/Textarea';
 
+import ExistingClientSearch from './ExistingClientSearch';
+
 import { ClientDetails } from '../types/quotation.types';
 import type { UseQuotationState } from '../types/quotation.types';
 import type { FieldTouched } from '../types/validation.types';
+import type { ClientInfo } from '../../clients/types/client.types';
 
 interface ClientDetailsFormProps {
   client: ClientDetails;
@@ -15,6 +18,13 @@ interface ClientDetailsFormProps {
   ) => void;
 
   readOnly?: boolean;
+
+  showClientSelector?: boolean;
+
+  selectedClientId?: number;
+  selectedClientName?: string;
+  onSelectClient?: (client: ClientInfo) => void;
+  onClearClient?: () => void;
 
   error?: {
     name: string;
@@ -37,6 +47,11 @@ const ClientDetailsForm = ({
   client,
   onChange,
   readOnly = false,
+  showClientSelector = false,
+  selectedClientId,
+  selectedClientName,
+  onSelectClient,
+  onClearClient,
   error,
   touched,
   onTouchField,
@@ -71,6 +86,15 @@ const ClientDetailsForm = ({
 
   return (
     <Card title="Client Details">
+      {showClientSelector && onSelectClient && onClearClient && (
+        <ExistingClientSearch
+          selectedClientId={selectedClientId}
+          selectedClientName={selectedClientName}
+          onSelect={onSelectClient}
+          onClear={onClearClient}
+        />
+      )}
+
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <Input
           label="Client Name"
