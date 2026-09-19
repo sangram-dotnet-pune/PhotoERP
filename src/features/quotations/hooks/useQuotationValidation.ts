@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import type { UseQuotationState } from '../types/quotation.types';
+import type { UseQuotationState, ServiceItem } from '../types/quotation.types';
 import type { QuotationErrors, FieldTouched } from '../types/validation.types';
 import {
   validateRequired,
@@ -23,6 +23,9 @@ const emptyErrors: QuotationErrors = {
   noServices: '',
   discountExceeds: '',
   advanceExceeds: '',
+  serviceName: '',
+  serviceQuantity: '',
+  servicePrice: '',
 };
 
 const initialTouched: FieldTouched = {
@@ -31,6 +34,8 @@ const initialTouched: FieldTouched = {
   email: false,
   eventType: false,
   eventDate: false,
+  discount: false,
+  advance: false,
 };
 
 export const useQuotationValidation = () => {
@@ -65,17 +70,17 @@ export const useQuotationValidation = () => {
     for (const service of state.services) {
       const nameError = validateSelect(service.serviceName, 'Service name');
       if (nameError) {
-        newErrors.noServices = nameError;
+        newErrors.serviceName = nameError;
         break;
       }
       const qtyError = validatePositiveNumber(service.quantity, 'Quantity');
       if (qtyError) {
-        newErrors.noServices = qtyError;
+        newErrors.serviceQuantity = qtyError;
         break;
       }
       const priceError = validateNonNegativeNumber(service.price, 'Price');
       if (priceError) {
-        newErrors.noServices = priceError;
+        newErrors.servicePrice = priceError;
         break;
       }
     }
@@ -95,6 +100,15 @@ export const useQuotationValidation = () => {
     }
 
     setErrors(newErrors);
+    setTouched({
+      name: true,
+      phone: true,
+      email: true,
+      eventType: true,
+      eventDate: true,
+      discount: true,
+      advance: true,
+    });
 
     return Object.values(newErrors).every((e) => !e);
   }, []);
@@ -102,6 +116,53 @@ export const useQuotationValidation = () => {
   const clearErrors = useCallback(() => {
     setErrors(emptyErrors);
   }, []);
+
+  const validateServiceField = useCallback(
+    (_serviceId: number, field: 'name' | 'quantity' | 'price', service: ServiceItem) => {
+      setErrors((prev) => {
+        const next = { ...prev };
+        if (field === 'name') {
+          next.serviceName = validateSelect(service.serviceName, 'Service name') || '';
+        } else if (field === 'quantity') {
+          next.serviceQuantity = validatePositiveNumber(service.quantity, 'Quantity') || '';
+        } else {
+          next.servicePrice = validateNonNegativeNumber(service.price, 'Price') || '';
+        }
+        return next;
+      });
+    },
+    []
+  );
+
+  const validatePaymentField = useCallback(
+    (field: 'discount' | 'advance', state: { discount: number | ''; advance: number | ''; subtotal: number; total: number }) => {
+      const discountNum = Number(state.discount) || 0;
+      const advanceNum = Number(state.advance) || 0;
+
+      setErrors((prev) => {
+        const next = { ...prev };
+        if (field === 'discount') {
+          const error = validateNonNegativeNumber(discountNum, 'Discount');
+          if (error) {
+            next.discountExceeds = error;
+          } else {
+            const maxError = validateMaxValue(discountNum, state.subtotal, 'Discount');
+            next.discountExceeds = maxError || '';
+          }
+        } else {
+          const error = validateNonNegativeNumber(advanceNum, 'Advance');
+          if (error) {
+            next.advanceExceeds = error;
+          } else {
+            const maxError = validateMaxValue(advanceNum, state.total, 'Advance');
+            next.advanceExceeds = maxError || '';
+          }
+        }
+        return next;
+      });
+    },
+    []
+  );
 
   const validateField = useCallback(
     (field: keyof FieldTouched, state: UseQuotationState) => {
@@ -133,6 +194,26 @@ export const useQuotationValidation = () => {
             next.eventDate = error || '';
             break;
           }
+          case 'discount': {
+            const error = validateNonNegativeNumber(state.discount, 'Discount');
+            if (error) {
+              next.discountExceeds = error;
+            } else {
+              const maxError = validateMaxValue(state.discount, state.subtotal, 'Discount');
+              next.discountExceeds = maxError || '';
+            }
+            break;
+          }
+          case 'advance': {
+            const error = validateNonNegativeNumber(state.advance, 'Advance');
+            if (error) {
+              next.advanceExceeds = error;
+            } else {
+              const maxError = validateMaxValue(state.advance, state.total, 'Advance');
+              next.advanceExceeds = maxError || '';
+            }
+            break;
+          }
         }
         return next;
       });
@@ -146,6 +227,8 @@ export const useQuotationValidation = () => {
     touchField,
     validate,
     validateField,
+    validateServiceField,
+    validatePaymentField,
     clearErrors,
   };
 };

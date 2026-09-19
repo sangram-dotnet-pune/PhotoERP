@@ -7,6 +7,9 @@ export interface QuotationErrors {
   noServices: string;
   discountExceeds: string;
   advanceExceeds: string;
+  serviceName: string;
+  serviceQuantity: string;
+  servicePrice: string;
 }
 
 export interface FieldTouched {
@@ -15,4 +18,6 @@ export interface FieldTouched {
   email: boolean;
   eventType: boolean;
   eventDate: boolean;
+  discount: boolean;
+  advance: boolean;
 }

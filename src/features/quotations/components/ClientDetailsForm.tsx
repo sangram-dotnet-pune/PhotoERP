@@ -105,6 +105,8 @@ const ClientDetailsForm = ({
           onChange={(e) => handleChange('name', e.target.value)}
           onBlur={() => handleBlur('name')}
           error={touched?.name ? error?.name : undefined}
+          id="client-name"
+          name="client-name"
         />
 
         <Input
@@ -117,6 +119,8 @@ const ClientDetailsForm = ({
           onChange={(e) => handleChange('phone', e.target.value)}
           onBlur={() => handleBlur('phone')}
           error={touched?.phone ? error?.phone : undefined}
+          id="client-phone"
+          name="client-phone"
         />
 
         <Input
@@ -128,6 +132,8 @@ const ClientDetailsForm = ({
           onChange={(e) => handleChange('email', e.target.value)}
           onBlur={() => handleBlur('email')}
           error={touched?.email ? error?.email : undefined}
+          id="client-email"
+          name="client-email"
         />
 
         <div />

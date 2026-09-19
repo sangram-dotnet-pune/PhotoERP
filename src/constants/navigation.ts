@@ -6,6 +6,7 @@ import {
   Settings,
   BarChart3,
   FilePlus,
+  Wallet,
 
 } from 'lucide-react';
 
@@ -31,6 +32,11 @@ export const navigationItems = [
     title: 'Clients',
     path: ROUTES.CLIENTS,
     icon: Users,
+  },
+  {
+    title: 'Expenses',
+    path: ROUTES.EXPENSES,
+    icon: Wallet,
   },
   {
     title: 'Reports',

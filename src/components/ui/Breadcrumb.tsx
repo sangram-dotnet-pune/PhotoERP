@@ -13,6 +13,7 @@ const routeLabels: Record<string, string> = {
   [ROUTES.QUOTATIONS]: 'Quotations',
   [ROUTES.NEW_QUOTATION]: 'New Quotation',
   [ROUTES.CLIENTS]: 'Clients',
+  [ROUTES.EXPENSES]: 'Expenses',
   [ROUTES.REPORTS]: 'Reports',
   [ROUTES.REPORTS_REVENUE]: 'Revenue',
   [ROUTES.REPORTS_PENDING]: 'Pending Payments',

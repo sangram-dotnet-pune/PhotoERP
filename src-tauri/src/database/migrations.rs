@@ -116,6 +116,16 @@ pub fn run(conn: &Connection) -> Result<(), String> {
             last_number INTEGER NOT NULL DEFAULT 0
         );
 
+        CREATE TABLE IF NOT EXISTS expenses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            expense_type TEXT NOT NULL DEFAULT 'Other',
+            note TEXT NOT NULL DEFAULT '',
+            amount REAL NOT NULL DEFAULT 0,
+            expense_date TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE INDEX IF NOT EXISTS idx_quotations_client_id
             ON quotations (client_id);
 

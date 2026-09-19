@@ -1,5 +1,6 @@
 pub mod client;
 pub mod client_details;
+pub mod expense;
 pub mod payment;
 pub mod quotation;
 pub mod quotation_list;

@@ -8,7 +8,7 @@ import ServicesTable from './ServicesTable';
 
 import type { QuotationErrors, FieldTouched } from '../types/validation.types';
 import type { UseQuotationReturn } from '../hooks/useQuotation';
-import type { UseQuotationState } from '../types/quotation.types';
+import type { UseQuotationState, ServiceItem } from '../types/quotation.types';
 
 interface QuotationFormProps {
   quotation: UseQuotationReturn;
@@ -25,6 +25,21 @@ interface QuotationFormProps {
   touched?: FieldTouched;
   onTouchField?: (field: keyof FieldTouched) => void;
   onValidateField?: (field: keyof FieldTouched, state: UseQuotationState) => void;
+
+  // Service validation
+  serviceErrors?: {
+    serviceName?: string;
+    serviceQuantity?: string;
+    servicePrice?: string;
+  };
+  touchedServices?: Record<number, { name: boolean; quantity: boolean; price: boolean }>;
+  onTouchServiceField?: (serviceId: number, field: 'name' | 'quantity' | 'price') => void;
+  onValidateServiceField?: (serviceId: number, field: 'name' | 'quantity' | 'price', state: ServiceItem) => void;
+
+  // Payment validation
+  paymentTouched?: { discount: boolean; advance: boolean };
+  onTouchPaymentField?: (field: 'discount' | 'advance') => void;
+  onValidatePaymentField?: (field: 'discount' | 'advance', state: { discount: number | ''; advance: number | ''; subtotal: number; total: number }) => void;
 }
 
 const QuotationForm = ({
@@ -40,6 +55,12 @@ const QuotationForm = ({
   touched,
   onTouchField,
   onValidateField,
+  touchedServices,
+  onTouchServiceField,
+  onValidateServiceField,
+  paymentTouched,
+  onTouchPaymentField,
+  onValidatePaymentField,
 }: QuotationFormProps) => {
 
   const readOnly = mode === 'view';
@@ -101,6 +122,14 @@ const QuotationForm = ({
         updateService={quotation.updateService}
         readOnly={readOnly}
         error={isValidating ? errors?.noServices : undefined}
+        serviceErrors={isValidating ? {
+          serviceName: errors?.serviceName,
+          serviceQuantity: errors?.serviceQuantity,
+          servicePrice: errors?.servicePrice,
+        } : undefined}
+        touchedServices={isValidating ? touchedServices : undefined}
+        onTouchServiceField={isValidating ? onTouchServiceField : undefined}
+        onValidateServiceField={isValidating ? onValidateServiceField : undefined}
       />
 
       <PaymentSummary
@@ -116,6 +145,9 @@ const QuotationForm = ({
           discount: errors?.discountExceeds || '',
           advance: errors?.advanceExceeds || '',
         } : undefined}
+        touched={isValidating ? paymentTouched : undefined}
+        onTouchField={isValidating ? onTouchPaymentField : undefined}
+        onValidateField={isValidating ? onValidatePaymentField : undefined}
       />
 
       <NotesSection

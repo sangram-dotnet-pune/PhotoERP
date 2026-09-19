@@ -67,6 +67,24 @@ export const useQuotation = () => {
 
   const [services, setServices] = useState<ServiceItem[]>([]);
 
+  // Service validation state
+  const [touchedServices, setTouchedServices] = useState<
+    Record<number, { name: boolean; quantity: boolean; price: boolean }>
+  >({});
+
+  const touchServiceField = (
+    serviceId: number,
+    field: 'name' | 'quantity' | 'price',
+  ) => {
+    setTouchedServices((prev) => ({
+      ...prev,
+      [serviceId]: {
+        ...prev[serviceId],
+        [field]: true,
+      },
+    }));
+  };
+
   // ==============================
   // Payment
   // ==============================
@@ -74,6 +92,19 @@ export const useQuotation = () => {
   const [discount, setDiscount] = useState<number | ''>('');
 
   const [advance, setAdvance] = useState<number | ''>('');
+
+  // Payment validation state
+  const [paymentTouched, setPaymentTouched] = useState<{
+    discount: boolean;
+    advance: boolean;
+  }>({
+    discount: false,
+    advance: false,
+  });
+
+  const touchPaymentField = (field: 'discount' | 'advance') => {
+    setPaymentTouched((prev) => ({ ...prev, [field]: true }));
+  };
 
   // ==============================
   // Notes
@@ -327,5 +358,11 @@ export const useQuotation = () => {
     removeService,
     updateService,
     loadQuotation,
+
+    // Validation helpers
+    touchedServices,
+    touchServiceField,
+    paymentTouched,
+    touchPaymentField,
   };
 };

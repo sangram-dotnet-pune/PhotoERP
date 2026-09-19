@@ -12,5 +12,6 @@ export const ROUTES = {
   UPCOMING_EVENTS: '/events/upcoming',
   CLIENTS: '/clients',
   CLIENT_DETAILS: '/clients/:id',
+  EXPENSES: '/expenses',
   NOT_FOUND: '*',
 } as const;

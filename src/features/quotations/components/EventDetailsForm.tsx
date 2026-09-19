@@ -2,7 +2,6 @@ import Card from '../../../components/ui/Card';
 import Input from '../../../components/ui/Input';
 import Textarea from '../../../components/ui/Textarea';
 
-import data from '../Data/quotation.data';
 import { EventDetails } from '../types/quotation.types';
 import type { UseQuotationState } from '../types/quotation.types';
 import type { FieldTouched } from '../types/validation.types';
@@ -72,42 +71,24 @@ const EventDetailsForm = ({
     <Card title="Event Details">
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         {/* Event Type */}
-        <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
-            Event Type
-          </label>
-
-          <select
-            value={event.eventType}
-            disabled={readOnly}
-            onChange={(e) => handleChange('eventType', e.target.value)}
-            onBlur={() => handleBlur('eventType')}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
-          >
-            <option value="">
-              Select Event Type
-            </option>
-
-            {data.eventTypes.map((type) => (
-              <option
-                key={type}
-                value={type}
-              >
-                {type}
-              </option>
-            ))}
-          </select>
-          {touched?.eventType && error?.eventType && (
-            <p className="mt-1 text-sm text-red-500">
-              {error.eventType}
-            </p>
-          )}
-        </div>
+        <Input
+          label="Event Type"
+          placeholder="Enter event type"
+          id="event-type"
+          name="event-type"
+          readOnly={readOnly}
+          value={event.eventType}
+          onChange={(e) => handleChange('eventType', e.target.value)}
+          onBlur={() => handleBlur('eventType')}
+          error={touched?.eventType ? error?.eventType : undefined}
+        />
 
         {/* Event Date */}
         <Input
           label="Event Date"
           type="date"
+          id="event-date"
+          name="event-date"
           readOnly={readOnly}
           value={event.eventDate}
           onChange={(e) => handleChange('eventDate', e.target.value)}

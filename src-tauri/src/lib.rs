@@ -27,6 +27,12 @@ use commands::{
         search_clients,
         find_client_by_contact,
     },
+    expense::{
+        get_expenses,
+        add_expense,
+        update_expense,
+        delete_expense,
+    },
     payment::{
         add_payment,
         get_payments_by_quotation,
@@ -96,6 +102,10 @@ pub fn run() {
             delete_client,
             search_clients,
             find_client_by_contact,
+            get_expenses,
+            add_expense,
+            update_expense,
+            delete_expense,
             add_payment,
             get_payments_by_quotation,
             get_payment_summary,

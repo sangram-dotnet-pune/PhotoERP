@@ -17,6 +17,14 @@ interface PaymentSummaryProps {
     discount: string;
     advance: string;
   };
+
+  touched?: {
+    discount: boolean;
+    advance: boolean;
+  };
+
+  onTouchField?: (field: 'discount' | 'advance') => void;
+  onValidateField?: (field: 'discount' | 'advance', state: { discount: number | ''; advance: number | ''; subtotal: number; total: number }) => void;
 }
 
 const PaymentSummary = ({
@@ -29,7 +37,44 @@ const PaymentSummary = ({
   setAdvance,
   readOnly = false,
   error,
+  touched,
+  onTouchField,
+  onValidateField,
 }: PaymentSummaryProps) => {
+  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === '') {
+      setDiscount('');
+    } else {
+      const num = Number(val);
+      setDiscount(num < 0 ? 0 : num);
+    }
+  };
+
+  const handleAdvanceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === '') {
+      setAdvance('');
+    } else {
+      const num = Number(val);
+      setAdvance(num < 0 ? 0 : num);
+    }
+  };
+
+  const handleDiscountBlur = () => {
+    if (onTouchField) onTouchField('discount');
+    if (onValidateField) {
+      onValidateField('discount', { discount, advance, subtotal, total });
+    }
+  };
+
+  const handleAdvanceBlur = () => {
+    if (onTouchField) onTouchField('advance');
+    if (onValidateField) {
+      onValidateField('advance', { discount, advance, subtotal, total });
+    }
+  };
+
   return (
     <Card title="Payment Summary">
       <div className="space-y-6">
@@ -49,16 +94,11 @@ const PaymentSummary = ({
           value={discount}
           min={0}
           readOnly={readOnly}
-          onChange={(e) => {
-            const val = e.target.value;
-            if (val === '') {
-              setDiscount('');
-            } else {
-              const num = Number(val);
-              setDiscount(num < 0 ? 0 : num);
-            }
-          }}
-          error={error?.discount}
+          onChange={handleDiscountChange}
+          onBlur={handleDiscountBlur}
+          error={touched?.discount ? error?.discount : undefined}
+          id="discount"
+          name="discount"
         />
 
         {/* Grand Total */}
@@ -79,16 +119,11 @@ const PaymentSummary = ({
           value={advance}
           min={0}
           readOnly={readOnly}
-          onChange={(e) => {
-            const val = e.target.value;
-            if (val === '') {
-              setAdvance('');
-            } else {
-              const num = Number(val);
-              setAdvance(num < 0 ? 0 : num);
-            }
-          }}
-          error={error?.advance}
+          onChange={handleAdvanceChange}
+          onBlur={handleAdvanceBlur}
+          error={touched?.advance ? error?.advance : undefined}
+          id="advance"
+          name="advance"
         />
 
         {/* Balance */}

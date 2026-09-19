@@ -7,6 +7,7 @@ import QuotationListPage from '../features/quotations/pages/QuotationListPage';
 import ClientsPage from '../features/clients/pages/ClientsPage';
 import ClientDetailsPage from '../features/clients/pages/ClientDetailsPage';
 import DataManagementPage from '../features/settings/pages/DataManagementPage';
+import ExpensesPage from '../features/expenses/pages/ExpensesPage';
 import ReportsPage from '../features/reports/pages/ReportsPage';
 import RevenuePage from '../features/reports/pages/RevenuePage';
 import PendingPaymentsPage from '../features/reports/pages/PendingPaymentsPage';
@@ -39,6 +40,10 @@ export const router = createHashRouter([
       {
         path: 'clients/:id',
         element: <ClientDetailsPage />,
+      },
+      {
+        path: ROUTES.EXPENSES.substring(1),
+        element: <ExpensesPage />,
       },
       {
         path: ROUTES.SETTINGS.substring(1),

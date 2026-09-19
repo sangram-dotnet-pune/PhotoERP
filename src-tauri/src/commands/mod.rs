@@ -1,6 +1,7 @@
 pub mod client;
 pub mod dashboard;
 pub mod data_management;
+pub mod expense;
 pub mod export;
 pub mod payment;
 pub mod quotation;
