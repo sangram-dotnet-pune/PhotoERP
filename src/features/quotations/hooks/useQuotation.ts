@@ -197,6 +197,28 @@ export const useQuotation = () => {
   };
 
   // ==============================
+  // Add Services in Bulk (from a package)
+  // ==============================
+
+  const addServices = (
+    items: { serviceName: string; quantity: number; price: number }[],
+  ) => {
+    if (items.length === 0) return;
+
+    const now = Date.now();
+
+    setServices((prev) => [
+      ...prev,
+      ...items.map((item, index) => ({
+        id: now + index,
+        serviceName: item.serviceName,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+    ]);
+  };
+
+  // ==============================
   // Remove Service
   // ==============================
 
@@ -355,6 +377,7 @@ export const useQuotation = () => {
     clearClient,
 
     addService,
+    addServices,
     removeService,
     updateService,
     loadQuotation,

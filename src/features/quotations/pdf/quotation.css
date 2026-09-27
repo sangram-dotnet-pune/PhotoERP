@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:wght@500;600;700&family=Dancing+Script:wght@600;700&display=swap');
 
 :root {
     --rose: #B97862;         
@@ -209,11 +209,6 @@ tr {
     display:flex;
     align-items:center;
     gap:12px;
-}
-
-.camera-icon {
-    color: var(--rose);
-    flex-shrink: 0;
 }
 
 .logo-image {
@@ -646,4 +641,229 @@ tr {
     text-align:right;
     font-size:50px;
     line-height: 1.1;
+}
+
+/* =========================
+   MINIMAL HEADER STYLE
+========================= */
+
+.header-minimal {
+    padding: 12mm 0 8mm;
+    border-bottom: 1px solid var(--border);
+}
+
+.header-minimal .header-brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.header-minimal .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-minimal .header-brand-name {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--rose);
+    text-transform: uppercase;
+}
+
+.header-minimal .header-brand-owner {
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+
+.header-minimal .header-brand-logo {
+    max-height: 20mm;
+    max-width: 40mm;
+    object-fit: contain;
+}
+
+.header-minimal .header-title-block {
+    margin-top: 14mm;
+    text-align: center;
+}
+
+.header-minimal .header-title-main {
+    margin: 0;
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--rose);
+}
+
+.header-minimal .header-title-sub {
+    margin: 8px 0 0;
+    font-size: 13px;
+    letter-spacing: 5px;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+
+/* =========================
+   MODERN HEADER STYLE
+========================= */
+
+.header-modern {
+    padding: 0;
+    overflow: hidden;
+}
+
+.header-modern .modern-band {
+    background: linear-gradient(135deg, var(--rose) 0%, var(--rose-dark) 100%);
+    color: white;
+    padding: 14mm 14mm 20mm;
+    position: relative;
+}
+
+.header-modern .modern-band-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.header-modern .modern-logo {
+    max-height: 18mm;
+    max-width: 45mm;
+    object-fit: contain;
+    filter: none;
+}
+
+.header-modern .modern-brand-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, 0.95);
+    text-transform: uppercase;
+}
+
+.header-modern .modern-title-block {
+    margin-top: 18mm;
+}
+
+.header-modern .modern-title-sub {
+    margin: 0;
+    font-size: 12px;
+    letter-spacing: 6px;
+    color: rgba(255, 255, 255, 0.85);
+    text-transform: uppercase;
+}
+
+.header-modern .modern-title-main {
+    margin: 6px 0 0;
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: 4px;
+}
+
+.header-modern .modern-underline {
+    margin-top: 6mm;
+    width: 26mm;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 2px;
+}
+
+.header-modern .modern-notch {
+    height: 10mm;
+    background: var(--cream);
+    border-radius: 0 0 26mm 26mm;
+    margin-top: -1px;
+}
+
+/* =========================
+   SERVICES TABLE STYLES
+========================= */
+
+.package-section .package-table-minimal thead {
+    background: transparent;
+    border-bottom: 2px solid var(--rose);
+}
+
+.package-table-minimal th {
+    padding: 12px 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--rose-dark);
+    border: none;
+}
+
+.package-table-minimal td {
+    padding: 14px 16px;
+    border-top: none;
+    border-bottom: 1px solid var(--pink-light);
+}
+
+.package-section .package-table-bordered {
+    border: 1px solid var(--rose-dark);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.package-table-bordered thead {
+    background: var(--rose);
+}
+
+.package-table-bordered th {
+    color: white;
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.package-table-bordered td {
+    border-top: 1px solid var(--border);
+    border-right: 1px solid var(--pink-light);
+}
+
+/* =========================
+   SIGNATURE SECTION
+========================= */
+
+.signature-section {
+    padding-left: 14mm;
+    padding-right: 14mm;
+    padding-top: 12mm;
+}
+
+.signature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+}
+
+.signature-block {
+    text-align: center;
+}
+
+.signature-spacer {
+    height: 16mm;
+}
+
+.signature-line {
+    border-bottom: 1px solid var(--text);
+}
+
+.signature-name {
+    margin-top: 4mm;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.signature-role {
+    margin-top: 1mm;
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }

@@ -126,6 +126,32 @@ pub fn run(conn: &Connection) -> Result<(), String> {
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS service_catalog (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            price REAL NOT NULL DEFAULT 0,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS packages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS package_services (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            package_id INTEGER NOT NULL,
+            service_name TEXT NOT NULL,
+            quantity INTEGER NOT NULL DEFAULT 1,
+            price REAL NOT NULL DEFAULT 0,
+            FOREIGN KEY(package_id)
+            REFERENCES packages(id)
+            ON DELETE CASCADE
+        );
+
         CREATE INDEX IF NOT EXISTS idx_quotations_client_id
             ON quotations (client_id);
 
@@ -134,6 +160,9 @@ pub fn run(conn: &Connection) -> Result<(), String> {
 
         CREATE INDEX IF NOT EXISTS idx_payments_quotation_id
             ON payments (quotation_id);
+
+        CREATE INDEX IF NOT EXISTS idx_package_services_package_id
+            ON package_services (package_id);
         ",
     )
     .map_err(|e| format!("Failed to run migrations: {e}"))?;

@@ -18,14 +18,14 @@ import { mapQuotationToPdf } from '../../../utils/pdfMapper';
 
 import generateQuotationPdf from '../pdf/generateQuotationPdf';
 import PdfPreview from '../pdf/PdfPreview';
-import { useStudioSettings } from '../../../hooks/useStudioSettings';
+import { usePdfConfig } from '../../../hooks/usePdfConfig';
 import { toastDismiss, toastError, toastLoading, toastSuccess } from '../../../utils/toast';
 
 const NewQuotationPage = () => {
   const navigate = useNavigate();
   const quotation = useQuotation();
   const validation = useQuotationValidation();
-  const studio = useStudioSettings();
+  const { config, studio } = usePdfConfig();
 
   const pdfRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +33,12 @@ const NewQuotationPage = () => {
 
   const pdfQuotation = mapQuotationToPdf(
     mapQuotationToDto(quotation.formState),
-    studio,
+    {
+      studio,
+      template: config.template,
+      branding: config.branding,
+      logo: config.logo,
+    },
   );
 
   const handleSaveQuotation = async () => {
@@ -197,6 +202,7 @@ const NewQuotationPage = () => {
         paymentTouched={quotation.paymentTouched}
         onTouchPaymentField={quotation.touchPaymentField}
         onValidatePaymentField={validation.validatePaymentField}
+        addServices={quotation.addServices}
       />
 
       <PdfPreview ref={pdfRef} quotation={pdfQuotation} />

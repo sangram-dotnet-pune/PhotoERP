@@ -35,6 +35,7 @@ interface QuotationFormProps {
   touchedServices?: Record<number, { name: boolean; quantity: boolean; price: boolean }>;
   onTouchServiceField?: (serviceId: number, field: 'name' | 'quantity' | 'price') => void;
   onValidateServiceField?: (serviceId: number, field: 'name' | 'quantity' | 'price', state: ServiceItem) => void;
+  addServices?: (items: { serviceName: string; quantity: number; price: number }[]) => void;
 
   // Payment validation
   paymentTouched?: { discount: boolean; advance: boolean };
@@ -61,6 +62,7 @@ const QuotationForm = ({
   paymentTouched,
   onTouchPaymentField,
   onValidatePaymentField,
+  addServices,
 }: QuotationFormProps) => {
 
   const readOnly = mode === 'view';
@@ -120,6 +122,7 @@ const QuotationForm = ({
         addService={quotation.addService}
         removeService={quotation.removeService}
         updateService={quotation.updateService}
+        addServices={addServices}
         readOnly={readOnly}
         error={isValidating ? errors?.noServices : undefined}
         serviceErrors={isValidating ? {

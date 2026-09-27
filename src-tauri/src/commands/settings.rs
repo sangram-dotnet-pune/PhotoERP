@@ -33,6 +33,7 @@ pub fn get_settings(app: AppHandle) -> Result<StudioSettings, String> {
 
     Ok(StudioSettings {
         studio_name: read_setting(&conn, "studio_name", &defaults.studio_name),
+        owner_name: read_setting(&conn, "owner_name", &defaults.owner_name),
         studio_phone: read_setting(&conn, "studio_phone", &defaults.studio_phone),
         studio_email: read_setting(&conn, "studio_email", &defaults.studio_email),
         studio_website: read_setting(&conn, "studio_website", &defaults.studio_website),
@@ -49,6 +50,7 @@ pub fn save_settings(app: AppHandle, settings: StudioSettings) -> Result<(), Str
     let conn = connection::get_connection(&app)?;
 
     write_setting(&conn, "studio_name", &settings.studio_name)?;
+    write_setting(&conn, "owner_name", &settings.owner_name)?;
     write_setting(&conn, "studio_phone", &settings.studio_phone)?;
     write_setting(&conn, "studio_email", &settings.studio_email)?;
     write_setting(&conn, "studio_website", &settings.studio_website)?;

@@ -27,3 +27,4 @@ serde_json = "1"
 rusqlite = { version = "0.37", features = ["bundled", "backup"] }
 tauri-plugin-dialog = "2.7.2"
 sha2 = "0.10"
+base64 = "0.22"

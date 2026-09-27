@@ -15,7 +15,7 @@ import { mapQuotationToPdf } from '../../../utils/pdfMapper';
 
 import generateQuotationPdf from '../pdf/generateQuotationPdf';
 import PdfPreview from '../pdf/PdfPreview';
-import { useStudioSettings } from '../../../hooks/useStudioSettings';
+import { usePdfConfig } from '../../../hooks/usePdfConfig';
 import { toastError, toastSuccess } from '../../../utils/toast';
 import { WORKFLOW_STATUSES } from '../../../types/settings';
 
@@ -32,7 +32,7 @@ const ViewQuotationPage = () => {
   const navigate = useNavigate();
 
   const quotation = useQuotation();
-  const studio = useStudioSettings();
+  const { config, studio } = usePdfConfig();
 
   const pdfRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +61,12 @@ const ViewQuotationPage = () => {
 
   const pdfQuotation = mapQuotationToPdf(
     mapQuotationToDto(quotation.formState),
-    studio,
+    {
+      studio,
+      template: config.template,
+      branding: config.branding,
+      logo: config.logo,
+    },
   );
 
   const handleGeneratePdf = async () => {

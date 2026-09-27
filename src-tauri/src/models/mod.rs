@@ -8,3 +8,7 @@ pub mod dashboard;
 pub mod reports;
 pub mod settings;
 pub mod app_lock;
+pub mod setup;
+pub mod branding;
+pub mod template_settings;
+pub mod package;

@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StudioSettings {
     pub studio_name: String,
+    #[serde(default)]
+    pub owner_name: String,
     pub studio_phone: String,
     pub studio_email: String,
     pub studio_website: String,
@@ -14,6 +16,7 @@ impl Default for StudioSettings {
     fn default() -> Self {
         StudioSettings {
             studio_name: "Photo ERP Studio".to_string(),
+            owner_name: String::new(),
             studio_phone: "+91 9022624329".to_string(),
             studio_email: "Jadhavomkar604@gmail.com".to_string(),
             studio_website: "www.photoerp.com".to_string(),

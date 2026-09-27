@@ -2,8 +2,10 @@ import { Trash2, Plus } from 'lucide-react';
 
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
+import PackageSelect from './PackageSelect';
 
 import { ServiceItem } from '../types/quotation.types';
+import type { ReusablePackage } from '../../../types/package';
 
 interface ServicesTableProps {
   services: ServiceItem[];
@@ -17,6 +19,12 @@ interface ServicesTableProps {
     field: keyof ServiceItem,
     value: string | number,
   ) => void;
+
+  addServices?: (items: {
+    serviceName: string;
+    quantity: number;
+    price: number;
+  }[]) => void;
 
   readOnly?: boolean;
 
@@ -39,6 +47,7 @@ const ServicesTable = ({
   addService,
   removeService,
   updateService,
+  addServices,
   readOnly = false,
   error,
   serviceErrors,
@@ -90,19 +99,36 @@ const ServicesTable = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold">
           Services
         </h2>
 
-        {!readOnly && (
-          <Button
-            leftIcon={<Plus size={18} />}
-            onClick={addService}
-          >
-            Add Service
-          </Button>
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {!readOnly && addServices && (
+            <PackageSelect
+              disabled={readOnly}
+              onSelect={(pkg: ReusablePackage) =>
+                addServices(
+                  pkg.services.map((s) => ({
+                    serviceName: s.service_name,
+                    quantity: s.quantity,
+                    price: s.price,
+                  })),
+                )
+              }
+            />
+          )}
+
+          {!readOnly && (
+            <Button
+              leftIcon={<Plus size={18} />}
+              onClick={addService}
+            >
+              Add Service
+            </Button>
+          )}
+        </div>
       </div>
 
       {error && (

@@ -5,7 +5,6 @@ import {
   Database,
   ShieldAlert,
   FileSpreadsheet,
-  Building2,
 } from 'lucide-react';
 import {
   save,
@@ -15,7 +14,6 @@ import {
 
 import Button from '../../../components/ui/Button';
 import Card from '../../../components/ui/Card';
-import Input from '../../../components/ui/Input';
 import Loader from '../../../components/ui/Loader';
 import BackNavigation from '../../../components/ui/BackNavigation';
 import {
@@ -25,14 +23,13 @@ import {
   toastDismiss,
 } from '../../../utils/toast';
 import { dataManagementService } from '../../../services/dataManagement.service';
-import { settingsService } from '../../../services/settings.service';
 import { exportService, ExportKind } from '../../../services/export.service';
-import {
-  DEFAULT_STUDIO_SETTINGS,
-  StudioSettings,
-} from '../../../types/settings';
 import type { DatabaseInfo } from '../types/dataManagement.types';
 import SecuritySection from '../../security/components/SecuritySection';
+import BusinessInformationSection from '../components/BusinessInformationSection';
+import LogoBrandingSection from '../components/LogoBrandingSection';
+import QuotationTemplateSection from '../components/QuotationTemplateSection';
+import ServicesPackagesSection from '../components/ServicesPackagesSection';
 
 const formatBytes = (bytes: number): string => {
   if (bytes <= 0) return '0 B';
@@ -62,53 +59,11 @@ const DataManagementPage = () => {
   const [backingUp, setBackingUp] = useState(false);
   const [restoring, setRestoring] = useState(false);
 
-  const [studio, setStudio] = useState<StudioSettings>(
-    DEFAULT_STUDIO_SETTINGS,
-  );
-  const [studioLoaded, setStudioLoaded] = useState(false);
-  const [savingStudio, setSavingStudio] = useState(false);
-
   const [exporting, setExporting] = useState<ExportKind | null>(null);
 
   useEffect(() => {
     loadInfo();
-    loadStudioSettings();
   }, []);
-
-  const loadStudioSettings = async () => {
-    try {
-      const data = await settingsService.getStudioSettings();
-      setStudio(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setStudioLoaded(true);
-    }
-  };
-
-  const handleSaveStudio = async () => {
-    if (!studio.studio_name.trim()) {
-      toastError('Studio name is required');
-      return;
-    }
-
-    const toastId = toastLoading('Saving settings...');
-
-    try {
-      setSavingStudio(true);
-      await settingsService.saveStudioSettings(studio);
-
-      toastDismiss(toastId);
-      toastSuccess('Settings saved successfully');
-    } catch (error) {
-      console.error(error);
-
-      toastDismiss(toastId);
-      toastError('Failed to save settings');
-    } finally {
-      setSavingStudio(false);
-    }
-  };
 
   const handleExportCsv = async (kind: ExportKind) => {
     const labels: Record<ExportKind, string> = {
@@ -260,86 +215,18 @@ const DataManagementPage = () => {
         <h1 className="text-3xl font-bold">Settings</h1>
 
         <p className="mt-1 text-slate-500">
-          Studio details, security, data export, backup and restore.
+          Business information, quotation template, packages, security, data
+          export, backup and restore.
         </p>
       </div>
 
-      <Card>
-        <div className="flex items-center gap-2">
-          <Building2 size={18} className="text-blue-600" aria-hidden="true" />
-          <h2 className="text-lg font-semibold text-slate-900">
-            Studio Details
-          </h2>
-        </div>
+      <BusinessInformationSection />
 
-        <p className="mt-1 text-sm text-slate-500">
-          These details are shown on generated quotation PDFs.
-        </p>
+      <LogoBrandingSection />
 
-        {!studioLoaded ? (
-          <div className="mt-4">
-            <Loader size="sm" text="Loading settings..." />
-          </div>
-        ) : (
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Input
-              label="Studio Name"
-              value={studio.studio_name}
-              onChange={(e) =>
-                setStudio((prev) => ({ ...prev, studio_name: e.target.value }))
-              }
-              required
-              aria-required="true"
-            />
+      <QuotationTemplateSection />
 
-            <Input
-              label="Phone"
-              value={studio.studio_phone}
-              onChange={(e) =>
-                setStudio((prev) => ({ ...prev, studio_phone: e.target.value }))
-              }
-              type="tel"
-              placeholder="10-digit mobile number"
-            />
-
-            <Input
-              label="Email"
-              type="email"
-              value={studio.studio_email}
-              onChange={(e) =>
-                setStudio((prev) => ({ ...prev, studio_email: e.target.value }))
-              }
-              placeholder="example@email.com"
-            />
-
-            <Input
-              label="Website"
-              value={studio.studio_website}
-              onChange={(e) =>
-                setStudio((prev) => ({ ...prev, studio_website: e.target.value }))
-              }
-              placeholder="https://example.com"
-            />
-
-            <div className="md:col-span-2">
-              <Input
-                label="Address"
-                value={studio.studio_address}
-                onChange={(e) =>
-                  setStudio((prev) => ({ ...prev, studio_address: e.target.value }))
-                }
-                placeholder="Studio address"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <Button loading={savingStudio} onClick={handleSaveStudio}>
-                Save Studio Details
-              </Button>
-            </div>
-          </div>
-        )}
-      </Card>
+      <ServicesPackagesSection />
 
       <SecuritySection />
 

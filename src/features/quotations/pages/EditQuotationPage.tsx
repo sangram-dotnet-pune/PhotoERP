@@ -14,7 +14,7 @@ import { mapQuotationToDto } from '../../../utils/quotationMapper';
 import { mapQuotationToPdf } from '../../../utils/pdfMapper';
 import generateQuotationPdf from '../pdf/generateQuotationPdf';
 import PdfPreview from '../pdf/PdfPreview';
-import { useStudioSettings } from '../../../hooks/useStudioSettings';
+import { usePdfConfig } from '../../../hooks/usePdfConfig';
 import {
   toastDismiss,
   toastError,
@@ -28,7 +28,7 @@ const EditQuotationPage = () => {
   const pdfRef = useRef<HTMLDivElement>(null);
   const quotation = useQuotation();
   const validation = useQuotationValidation();
-  const studio = useStudioSettings();
+  const { config, studio } = usePdfConfig();
 
   const [loading, setLoading] = useState(true);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -83,7 +83,12 @@ const EditQuotationPage = () => {
 
   const pdfQuotation = mapQuotationToPdf(
     mapQuotationToDto(quotation.formState),
-    studio,
+    {
+      studio,
+      template: config.template,
+      branding: config.branding,
+      logo: config.logo,
+    },
   );
 
   const handleGeneratePdf = async () => {
@@ -216,6 +221,7 @@ const EditQuotationPage = () => {
         paymentTouched={quotation.paymentTouched}
         onTouchPaymentField={quotation.touchPaymentField}
         onValidatePaymentField={validation.validatePaymentField}
+        addServices={quotation.addServices}
       />
 
       <PdfPreview ref={pdfRef} quotation={pdfQuotation} />

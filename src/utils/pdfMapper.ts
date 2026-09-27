@@ -4,6 +4,11 @@ import {
   DEFAULT_STUDIO_SETTINGS,
   StudioSettings,
 } from '../types/settings';
+import {
+  DEFAULT_TEMPLATE_SETTINGS,
+  TemplateSettings,
+  Branding,
+} from '../types/templateSettings';
 
 const formatDisplayDate = (iso: string): string => {
   if (!iso) return '';
@@ -25,13 +30,36 @@ const formatDisplayDate = (iso: string): string => {
   return `${Number(parts[2])} ${month} ${parts[0]}`;
 };
 
+export interface PdfConfigInput {
+  studio?: Partial<StudioSettings>;
+  template?: TemplateSettings;
+  branding?: Branding;
+  logo?: string;
+}
+
+/**
+ * Convert a quotation DTO into the PDF render model using the live PDF config
+ * (studio details + template styling + branding + uploaded logo).
+ *
+ * Branding colors override template colors so the "Logo & Branding" section
+ * stays the single source of truth for the overall look.
+ */
 export const mapQuotationToPdf = (
   quotation: QuotationDto,
-  studio?: Partial<StudioSettings>,
+  config?: PdfConfigInput,
 ): PdfQuotation => {
   const resolvedStudio = {
     ...DEFAULT_STUDIO_SETTINGS,
-    ...(studio || {}),
+    ...(config?.studio || {}),
+  };
+
+  const baseTemplate = config?.template || DEFAULT_TEMPLATE_SETTINGS;
+
+  const template: TemplateSettings = {
+    ...baseTemplate,
+    primary_color: config?.branding?.primary_color || baseTemplate.primary_color,
+    secondary_color:
+      config?.branding?.secondary_color || baseTemplate.secondary_color,
   };
 
   return {
@@ -72,10 +100,15 @@ export const mapQuotationToPdf = (
 
     studio: {
       name: resolvedStudio.studio_name,
+      ownerName: resolvedStudio.owner_name || '',
       phone: resolvedStudio.studio_phone,
       email: resolvedStudio.studio_email,
       website: resolvedStudio.studio_website,
       address: resolvedStudio.studio_address,
     },
+
+    template,
+
+    logo: config?.logo || '',
   };
 };

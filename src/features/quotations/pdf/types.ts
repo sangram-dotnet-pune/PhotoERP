@@ -1,3 +1,5 @@
+import type { TemplateSettings } from '../../../types/templateSettings';
+
 export interface PdfQuotation {
   quotationNo: string;
   quotationDate: string;
@@ -34,9 +36,13 @@ export interface PdfQuotation {
 
   studio: {
     name: string;
+    ownerName: string;
     phone: string;
     email: string;
     website: string;
     address: string;
   };
+
+  template: TemplateSettings;
+  logo: string;
 }
