@@ -35,8 +35,7 @@ const ServicesSection = ({
         <thead>
           <tr>
             <th className="icon-column"></th>
-            <th>Description</th>
-            <th>Details</th>
+            <th className="description-column">Description</th>
 
             {showPrices && (
               <th className="price-column">Price (₹)</th>
@@ -47,7 +46,7 @@ const ServicesSection = ({
         <tbody>
           {services.length === 0 ? (
             <tr>
-              <td colSpan={showPrices ? 4 : 3} className="empty-row">
+              <td colSpan={showPrices ? 3 : 2} className="empty-row">
                 No services added.
               </td>
             </tr>
@@ -62,14 +61,10 @@ const ServicesSection = ({
 
                 <td className="service-name">{service.serviceName}</td>
 
-                <td className="service-detail">
-                  Quantity : {service.quantity}
-                </td>
-
                 {showPrices && (
                   <td className="service-price">
                     ₹{' '}
-                    {(service.quantity * service.price).toLocaleString('en-IN')}
+                    {service.price.toLocaleString('en-IN')}
                   </td>
                 )}
               </tr>

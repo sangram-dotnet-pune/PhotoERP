@@ -297,6 +297,12 @@ fn delete_quotation_core(tx: &rusqlite::Transaction, id: i64) -> Result<(), Stri
     )
     .map_err(|e| format!("Failed to delete quotation services: {e}"))?;
 
+    tx.execute(
+        "DELETE FROM expenses WHERE quotation_id = ?1",
+        [id],
+    )
+    .map_err(|e| format!("Failed to delete quotation expenses: {e}"))?;
+
     tx.execute("DELETE FROM quotations WHERE id = ?1", [id])
         .map_err(|e| format!("Failed to delete quotation: {e}"))?;
 

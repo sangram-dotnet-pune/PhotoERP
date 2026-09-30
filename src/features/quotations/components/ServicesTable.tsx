@@ -62,7 +62,7 @@ const ServicesTable = ({
   ) => {
     updateService(serviceId, field, value);
 
-    if (field === 'serviceName' || field === 'price' || field === 'quantity') {
+    if (field === 'serviceName' || field === 'price') {
       setTimeout(() => {
         if (onValidateServiceField) {
           const service = services.find(s => s.id === serviceId);
@@ -112,7 +112,7 @@ const ServicesTable = ({
                 addServices(
                   pkg.services.map((s) => ({
                     serviceName: s.service_name,
-                    quantity: s.quantity,
+                    quantity: 1,
                     price: s.price,
                   })),
                 )
@@ -144,10 +144,6 @@ const ServicesTable = ({
               </th>
 
               <th className="p-4 text-center">
-                Quantity
-              </th>
-
-              <th className="p-4 text-center">
                 Price
               </th>
 
@@ -167,7 +163,7 @@ const ServicesTable = ({
             {services.length === 0 ? (
               <tr>
                 <td
-                  colSpan={readOnly ? 4 : 5}
+                  colSpan={readOnly ? 3 : 4}
                   className="p-8 text-center text-slate-500"
                 >
                   No services added.
@@ -199,27 +195,6 @@ const ServicesTable = ({
                     />
                   </td>
 
-                  <td className="w-28 p-3">
-                    <Input
-                      type="number"
-                      min={1}
-                      readOnly={readOnly}
-                      value={service.quantity}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        handleServiceChange(
-                          service.id,
-                          'quantity',
-                          val < 1 ? 1 : val,
-                        );
-                      }}
-                      onBlur={() => handleServiceBlur(service.id, 'quantity')}
-                      error={getServiceError(service.id, 'quantity')}
-                      id={`service-quantity-${service.id}`}
-                      name={`service-quantity-${service.id}`}
-                    />
-                  </td>
-
                   <td className="w-40 p-3">
                     <Input
                       type="number"
@@ -243,7 +218,7 @@ const ServicesTable = ({
 
                   <td className="text-center font-semibold">
                     ₹
-                    {(service.price * service.quantity).toLocaleString()}
+                    {service.price.toLocaleString()}
                   </td>
 
                   {!readOnly && (

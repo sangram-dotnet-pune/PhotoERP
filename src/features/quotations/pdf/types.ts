@@ -34,12 +34,13 @@ export interface PdfQuotation {
   total: number;
   balance: number;
 
+  notes: string;
+
   studio: {
     name: string;
     ownerName: string;
     phone: string;
     email: string;
-    website: string;
     address: string;
   };
 

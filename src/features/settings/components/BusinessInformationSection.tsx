@@ -114,15 +114,6 @@ const BusinessInformationSection = () => {
             placeholder="example@email.com"
           />
 
-          <Input
-            label="Website"
-            value={studio.studio_website}
-            onChange={(e) =>
-              setStudio((prev) => ({ ...prev, studio_website: e.target.value }))
-            }
-            placeholder="https://example.com"
-          />
-
           <div className="md:col-span-2">
             <Input
               label="Address"

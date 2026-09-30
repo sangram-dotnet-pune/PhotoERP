@@ -37,9 +37,9 @@ export const mapQuotationToDto = (
     services: data.services.map((service) => ({
       id: service.id,
       service_name: service.serviceName,
-      quantity: service.quantity,
+      quantity: 1,
       price: service.price,
-      total: service.quantity * service.price,
+      total: service.price,
     })),
   };
 };
@@ -77,7 +77,7 @@ export const mapDtoToQuotationState = (
     services: dto.services.map((service, index) => ({
       id: service.id ?? index + 1,
       serviceName: service.service_name,
-      quantity: service.quantity || 1,
+      quantity: 1,
       price: service.price,
     })),
 

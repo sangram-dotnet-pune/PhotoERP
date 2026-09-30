@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { Wallet, Plus, Search, Pencil, Trash2, Eye } from 'lucide-react';
+import {
+  Wallet,
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  FileText,
+} from 'lucide-react';
 import { confirm } from '@tauri-apps/plugin-dialog';
+import clsx from 'clsx';
 
 import Button from '../../../components/ui/Button';
 import Card from '../../../components/ui/Card';
 import Input from '../../../components/ui/Input';
-import Modal from '../../../components/ui/Modal';
 import Table, { TableColumn } from '../../../components/ui/Table';
 import EmptyState from '../../../components/ui/EmptyState';
 import LoadingState from '../../../components/ui/LoadingState';
@@ -18,81 +25,44 @@ import {
 } from '../../../utils/toast';
 
 import { expenseService } from '../../../services/expense.service';
-import { EXPENSE_TYPES } from '../types/expense.types';
-import type { Expense, ExpenseFormState } from '../types/expense.types';
-import { useExpenseValidation } from '../hooks/useExpenseValidation';
+import type {
+  Expense,
+  ExpenseSummary,
+} from '../types/expense.types';
+import { EXPENSE_CATEGORIES } from '../types/expense.types';
+import { quotationDisplayLabel } from '../types/expense.types';
+import { formatExpenseDate, formatRupees } from '../utils/expenseFormat';
+import ExpenseModal from '../components/ExpenseModal';
 
-const formatRupees = (value: number) =>
-  `₹${value.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-
-const toInputValue = (value: string) => {
-  if (!value) return '';
-  const normalized = value.replace(' ', 'T');
-  return normalized.length > 16 ? normalized.slice(0, 16) : normalized;
-};
-
-const toDateTimeLocal = (date: Date) => {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return (
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
-    `T${pad(date.getHours())}:${pad(date.getMinutes())}`
-  );
-};
-
-const defaultForm = (): ExpenseFormState => ({
-  expense_type: 'Other',
-  note: '',
-  amount: 0,
-  expense_date: toDateTimeLocal(new Date()),
-});
-
-const touchedFieldMap: Record<
-  keyof ExpenseFormState,
-  'expenseType' | 'note' | 'amount' | 'expenseDate'
-> = {
-  expense_type: 'expenseType',
-  note: 'note',
-  amount: 'amount',
-  expense_date: 'expenseDate',
-};
+const DATE_PART_LENGTH = 10;
+const datePart = (value: string) => value.slice(0, DATE_PART_LENGTH);
 
 const typeColors: Record<string, string> = {
-  Person: 'bg-blue-100 text-blue-700',
-  Equipment: 'bg-purple-100 text-purple-700',
-  Other: 'bg-slate-100 text-slate-700',
+  General: 'bg-slate-100 text-slate-700',
+  'Order Expense': 'bg-indigo-100 text-indigo-700',
 };
+
+const orderLabel = (expense: Expense) =>
+  quotationDisplayLabel(
+    expense.quotation_number ?? '',
+    expense.client_name ?? '',
+    expense.event_type ?? undefined,
+  );
 
 const ExpensesPage = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [summary, setSummary] = useState<ExpenseSummary | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [quotationFilter, setQuotationFilter] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<ExpenseFormState>(defaultForm());
-  const [saving, setSaving] = useState(false);
-
-  const validation = useExpenseValidation();
-
-  const filtered = useMemo(() => {
-    return expenses.filter((e) => {
-      const matchesSearch =
-        e.note.toLowerCase().includes(search.toLowerCase()) ||
-        e.expense_type.toLowerCase().includes(search.toLowerCase());
-
-      const matchesType = !typeFilter || e.expense_type === typeFilter;
-
-      return matchesSearch && matchesType;
-    });
-  }, [expenses, search, typeFilter]);
-
-  const totalExpenses = useMemo(() => {
-    return expenses.reduce((sum, e) => sum + e.amount, 0);
-  }, [expenses]);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
   useEffect(() => {
     loadExpenses();
@@ -101,8 +71,12 @@ const ExpensesPage = () => {
   const loadExpenses = async () => {
     try {
       setLoading(true);
-      const data = await expenseService.getExpenses();
+      const [data, summaryData] = await Promise.all([
+        expenseService.getExpenses(),
+        expenseService.getExpenseSummary(),
+      ]);
       setExpenses(data);
+      setSummary(summaryData);
     } catch (error) {
       console.error(error);
       toastError('Failed to load expenses');
@@ -111,88 +85,101 @@ const ExpensesPage = () => {
     }
   };
 
-  const resetForm = () => {
-    setForm(defaultForm());
-    setEditingId(null);
-    validation.clearErrors();
-  };
+  const availableCategories = useMemo(() => {
+    const fromData = new Set(expenses.map((e) => e.category).filter(Boolean));
+    return Array.from(
+      new Set([...EXPENSE_CATEGORIES, ...Array.from(fromData)]),
+    );
+  }, [expenses]);
+
+  const availableQuotations = useMemo(() => {
+    const seen = new Map<number, Expense>();
+    expenses.forEach((e) => {
+      if (e.quotation_id !== null && !seen.has(e.quotation_id)) {
+        seen.set(e.quotation_id, e);
+      }
+    });
+    return Array.from(seen.values()).sort((a, b) =>
+      (a.quotation_number ?? '').localeCompare(b.quotation_number ?? ''),
+    );
+  }, [expenses]);
+
+  const filtered = useMemo(() => {
+    return expenses.filter((e) => {
+      const query = search.trim().toLowerCase();
+      const matchesSearch =
+        !query ||
+        e.description.toLowerCase().includes(query) ||
+        e.category.toLowerCase().includes(query) ||
+        e.vendor.toLowerCase().includes(query) ||
+        e.payment_method.toLowerCase().includes(query) ||
+        (e.quotation_number ?? '').toLowerCase().includes(query) ||
+        (e.client_name ?? '').toLowerCase().includes(query);
+
+      const matchesCategory = !categoryFilter || e.category === categoryFilter;
+
+      const isOrder = e.quotation_id !== null;
+      const matchesType =
+        !typeFilter ||
+        (typeFilter === 'Order Expense' && isOrder) ||
+        (typeFilter === 'General' && !isOrder);
+
+      const matchesQuotation =
+        !quotationFilter || String(e.quotation_id) === quotationFilter;
+
+      const expenseDay = datePart(e.expense_date);
+      const matchesFrom = !fromDate || expenseDay >= fromDate;
+      const matchesTo = !toDate || expenseDay <= toDate;
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesType &&
+        matchesQuotation &&
+        matchesFrom &&
+        matchesTo
+      );
+    });
+  }, [
+    expenses,
+    search,
+    categoryFilter,
+    typeFilter,
+    quotationFilter,
+    fromDate,
+    toDate,
+  ]);
+
+  const quotationSummary = useMemo(() => {
+    if (!quotationFilter) return null;
+
+    const selected = availableQuotations.find(
+      (q) => String(q.quotation_id) === quotationFilter,
+    );
+
+    const total = filtered.reduce((sum, e) => sum + e.amount, 0);
+
+    return {
+      label: selected
+        ? orderLabel(selected)
+        : (availableQuotations[0] && orderLabel(availableQuotations[0])) ?? '',
+      total,
+    };
+  }, [quotationFilter, availableQuotations, filtered]);
 
   const handleOpenAdd = () => {
-    resetForm();
+    setEditingExpense(null);
     setModalOpen(true);
   };
 
   const handleOpenEdit = (expense: Expense) => {
-    validation.clearErrors();
-    setEditingId(expense.id);
-    setForm({
-      expense_type: expense.expense_type,
-      note: expense.note,
-      amount: expense.amount,
-      expense_date: toInputValue(expense.expense_date),
-    });
+    setEditingExpense(expense);
     setModalOpen(true);
-  };
-
-  const updateField = <K extends keyof ExpenseFormState>(
-    field: K,
-    value: ExpenseFormState[K],
-  ) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleBlur = (field: keyof ExpenseFormState) => {
-    const touchedKey = touchedFieldMap[field];
-    validation.touchField(touchedKey);
-    validation.validateField(touchedKey, form);
-  };
-
-  const handleSave = async () => {
-    const isValid = validation.validate(form);
-    if (!isValid) {
-      toastError('Please fill in all required fields before saving.');
-      return;
-    }
-
-    const toastId = toastLoading(editingId ? 'Updating expense...' : 'Adding expense...');
-
-    try {
-      setSaving(true);
-
-      if (editingId !== null) {
-        await expenseService.updateExpense({
-          id: editingId,
-          ...form,
-        });
-      } else {
-        await expenseService.addExpense(form);
-      }
-
-      toastDismiss(toastId);
-      toastSuccess(editingId ? 'Expense updated successfully' : 'Expense added successfully');
-
-      setModalOpen(false);
-      resetForm();
-      await loadExpenses();
-    } catch (error) {
-      console.error(error);
-
-      toastDismiss(toastId);
-      toastError(
-        typeof error === 'string'
-          ? error
-          : editingId
-          ? 'Failed to update expense'
-          : 'Failed to add expense',
-      );
-    } finally {
-      setSaving(false);
-    }
   };
 
   const handleDelete = async (expense: Expense) => {
     const confirmed = await confirm(
-      `Delete this "${expense.expense_type}" expense of ${formatRupees(expense.amount)}?\n\nNote: ${expense.note}`,
+      `Delete this "${expense.category}" expense of ${formatRupees(expense.amount)}?\n\n${expense.description || 'No description'}`,
       {
         title: 'Delete Expense',
         kind: 'warning',
@@ -206,7 +193,7 @@ const ExpensesPage = () => {
     const toastId = toastLoading('Deleting expense...');
 
     try {
-      await expenseService.deleteExpense(expense.id as number);
+      await expenseService.deleteExpense(expense.id);
 
       toastDismiss(toastId);
       toastSuccess('Expense deleted successfully');
@@ -223,28 +210,85 @@ const ExpensesPage = () => {
   const columns: TableColumn<Expense>[] = useMemo(
     () => [
       {
-        header: 'Type',
-        accessor: 'expense_type',
+        header: 'Date',
+        accessor: 'expense_date',
         sortable: true,
         render: (row) => (
-          <span
-            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-              typeColors[row.expense_type] || typeColors.Other
-            }`}
-          >
-            {row.expense_type}
+          <span className="text-slate-500">
+            {row.expense_date ? formatExpenseDate(row.expense_date) : '—'}
           </span>
         ),
       },
       {
-        header: 'Note',
-        accessor: 'note',
+        header: 'Description',
+        accessor: 'description',
         sortable: true,
         render: (row) => (
-          <span className="font-medium text-slate-900" title={row.note}>
-            {row.note}
+          <span className="font-medium text-slate-900" title={row.description}>
+            {row.description || row.category || '—'}
           </span>
         ),
+      },
+      {
+        header: 'Category',
+        accessor: 'category',
+        sortable: true,
+        render: (row) => <span className="text-slate-600">{row.category}</span>,
+      },
+      {
+        header: 'Type',
+        render: (row) => {
+          const isOrder = row.quotation_id !== null;
+          const label = isOrder ? 'Order Expense' : 'General';
+          return (
+            <div className="space-y-1">
+              <span
+                className={clsx(
+                  'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold',
+                  typeColors[label],
+                )}
+              >
+                {label}
+              </span>
+              {isOrder && (
+                <span className="block text-xs text-slate-500">
+                  / {orderLabel(row)}
+                </span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Order · Quotation',
+        sortable: true,
+        render: (row) =>
+          row.quotation_id !== null && row.quotation_number ? (
+            <span className="text-slate-700">
+              {row.quotation_number} — {row.client_name ?? ''}
+            </span>
+          ) : (
+            <span className="text-slate-400">—</span>
+          ),
+      },
+      {
+        header: 'Vendor',
+        sortable: true,
+        render: (row) =>
+          row.vendor ? (
+            <span className="text-slate-600">{row.vendor}</span>
+          ) : (
+            <span className="text-slate-400">—</span>
+          ),
+      },
+      {
+        header: 'Payment Method',
+        render: (row) =>
+          row.payment_method ? (
+            <span className="text-slate-600">{row.payment_method}</span>
+          ) : (
+            <span className="text-slate-400">—</span>
+          ),
       },
       {
         header: 'Amount',
@@ -254,30 +298,20 @@ const ExpensesPage = () => {
         render: (row) => formatRupees(row.amount),
       },
       {
-        header: 'Date',
-        accessor: 'expense_date',
-        sortable: true,
-        render: (row) => (
-          <span className="text-slate-500">
-            {row.expense_date ? row.expense_date.replace('T', ' ') : '—'}
-          </span>
-        ),
-      },
-      {
         header: 'Actions',
         render: (row) => (
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               onClick={() => handleOpenEdit(row)}
-              aria-label={`Edit expense ${row.note}`}
+              aria-label={`Edit expense ${row.description || row.category}`}
             >
               <Pencil size={16} aria-hidden="true" />
             </Button>
             <Button
               variant="danger"
               onClick={() => handleDelete(row)}
-              aria-label={`Delete expense ${row.note}`}
+              aria-label={`Delete expense ${row.description || row.category}`}
             >
               <Trash2 size={16} aria-hidden="true" />
             </Button>
@@ -285,8 +319,16 @@ const ExpensesPage = () => {
         ),
       },
     ],
-    []
+    [],
   );
+
+  const hasActiveFilters =
+    Boolean(search) ||
+    Boolean(categoryFilter) ||
+    Boolean(typeFilter) ||
+    Boolean(quotationFilter) ||
+    Boolean(fromDate) ||
+    Boolean(toDate);
 
   if (loading) {
     return (
@@ -305,7 +347,8 @@ const ExpensesPage = () => {
             Expenses
           </h1>
           <p className="text-slate-500">
-            Track your photography business expenses
+            Track general and order-specific expenses for your photography
+            business
           </p>
         </div>
 
@@ -317,13 +360,15 @@ const ExpensesPage = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Total Expenses</p>
+              <p className="text-sm font-medium text-slate-500">
+                Total Expenses
+              </p>
               <p className="mt-1 text-2xl font-bold text-red-600">
-                {formatRupees(totalExpenses)}
+                {formatRupees(summary?.total ?? 0)}
               </p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
@@ -335,27 +380,61 @@ const ExpensesPage = () => {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Total Entries</p>
+              <p className="text-sm font-medium text-slate-500">
+                Order Expenses
+              </p>
+              <p className="mt-1 text-2xl font-bold text-indigo-600">
+                {formatRupees(summary?.order_total ?? 0)}
+              </p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+              <FileText size={22} aria-hidden="true" />
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                General Expenses
+              </p>
               <p className="mt-1 text-2xl font-bold text-slate-800">
-                {expenses.length}
+                {formatRupees(summary?.general_total ?? 0)}
               </p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-              <Eye size={22} aria-hidden="true" />
+              <Wallet size={22} aria-hidden="true" />
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                This Month
+              </p>
+              <p className="mt-1 text-2xl font-bold text-blue-600">
+                {formatRupees(summary?.this_month ?? 0)}
+              </p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+              <Wallet size={22} aria-hidden="true" />
             </div>
           </div>
         </Card>
       </div>
 
       <Card>
-        <div className="flex flex-col gap-4 md:flex-row md:items-center">
-          <div className="relative flex-1">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
+          <div className="relative xl:col-span-2">
             <Search
               className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
               aria-hidden="true"
             />
             <Input
-              placeholder="Search expenses by note or type..."
+              placeholder="Search description, category, vendor, quotation..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
@@ -364,20 +443,88 @@ const ExpensesPage = () => {
           </div>
 
           <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 md:w-48"
-            aria-label="Filter by expense type"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            aria-label="Filter by category"
           >
-            <option value="">All Types</option>
-            {EXPENSE_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {type}
+            <option value="">All Categories</option>
+            {availableCategories.map((category) => (
+              <option key={category} value={category}>
+                {category}
               </option>
             ))}
           </select>
+
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            aria-label="Filter by expense type"
+          >
+            <option value="">All Types</option>
+            <option value="General">General</option>
+            <option value="Order Expense">Order Expense</option>
+          </select>
+
+          <select
+            value={quotationFilter}
+            onChange={(e) => setQuotationFilter(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            aria-label="Filter by quotation"
+          >
+            <option value="">All Orders</option>
+            {availableQuotations.map((quotation) => (
+              <option
+                key={quotation.quotation_id}
+                value={String(quotation.quotation_id)}
+              >
+                {orderLabel(quotation)}
+              </option>
+            ))}
+          </select>
+
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500"
+              aria-label="From date"
+            />
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500"
+              aria-label="To date"
+            />
+          </div>
         </div>
       </Card>
+
+      {quotationSummary && (
+        <Card className="border-indigo-200 bg-indigo-50">
+          <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+            <div>
+              <p className="text-sm font-medium text-indigo-600">
+                Order Expenses Summary
+              </p>
+              <p className="mt-1 text-lg font-semibold text-slate-900">
+                Order: {quotationSummary.label}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                Total Order Expenses
+              </p>
+              <p className="mt-1 text-2xl font-bold text-indigo-700">
+                {formatRupees(quotationSummary.total)}
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Table
         columns={columns}
@@ -385,7 +532,7 @@ const ExpensesPage = () => {
         loading={loading}
         rowKey={(row) => String(row.id)}
         emptyState={
-          filtered.length === 0 && (search || typeFilter) ? (
+          filtered.length === 0 && hasActiveFilters ? (
             <EmptyState
               title="No matching expenses found"
               description="Try changing your search or filters."
@@ -404,108 +551,21 @@ const ExpensesPage = () => {
         }
       />
 
-      <Modal
+      <ExpenseModal
         open={modalOpen}
-        title={editingId !== null ? 'Edit Expense' : 'Add Expense'}
+        title={editingExpense ? 'Edit Expense' : 'Add Expense'}
+        confirmText={editingExpense ? 'Save Changes' : 'Add Expense'}
+        initial={editingExpense}
         onClose={() => {
           setModalOpen(false);
-          resetForm();
+          setEditingExpense(null);
         }}
-        onConfirm={handleSave}
-        confirmText={editingId !== null ? 'Save Changes' : 'Add Expense'}
-        loading={saving}
-      >
-        <div className="space-y-4">
-          <div>
-            <label
-              htmlFor="expense-type"
-              className="mb-2 block text-sm font-medium text-slate-700"
-            >
-              Type
-              <span className="ml-1 text-red-500" aria-hidden="true">
-                *
-              </span>
-            </label>
-            <select
-              id="expense-type"
-              value={form.expense_type}
-              onChange={(e) => updateField('expense_type', e.target.value)}
-              onBlur={() => handleBlur('expense_type')}
-              aria-invalid={validation.touched.expenseType && !!validation.errors.expenseType}
-              aria-describedby={
-                validation.touched.expenseType && validation.errors.expenseType
-                  ? 'expense-type-error'
-                  : undefined
-              }
-              className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 ${
-                validation.touched.expenseType && validation.errors.expenseType
-                  ? 'border-red-500'
-                  : 'border-slate-300 focus:border-blue-500'
-              }`}
-            >
-              {EXPENSE_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-            {validation.touched.expenseType && validation.errors.expenseType && (
-              <p
-                id="expense-type-error"
-                className="mt-2 text-sm text-red-500"
-                role="alert"
-              >
-                {validation.errors.expenseType}
-              </p>
-            )}
-          </div>
-
-          <Input
-            label="Note"
-            placeholder="What was this expense for?"
-            value={form.note}
-            onChange={(e) => updateField('note', e.target.value)}
-            onBlur={() => handleBlur('note')}
-            error={
-              validation.touched.note ? validation.errors.note : undefined
-            }
-            required
-          />
-
-          <Input
-            label="Amount"
-            type="number"
-            min={0}
-            step="0.01"
-            placeholder="0.00"
-            value={form.amount}
-            onChange={(e) => {
-              const val = e.target.value;
-              updateField('amount', val === '' ? 0 : Number(val));
-            }}
-            onBlur={() => handleBlur('amount')}
-            error={
-              validation.touched.amount ? validation.errors.amount : undefined
-            }
-            required
-          />
-
-          <Input
-            label="Date"
-            type="datetime-local"
-            value={form.expense_date}
-            onChange={(e) => updateField('expense_date', e.target.value)}
-            onBlur={() => handleBlur('expense_date')}
-            error={
-              validation.touched.expenseDate
-                ? validation.errors.expenseDate
-                : undefined
-            }
-            helperText="Defaulted to the current date and time."
-            required
-          />
-        </div>
-      </Modal>
+        onSaved={() => {
+          setModalOpen(false);
+          setEditingExpense(null);
+          loadExpenses();
+        }}
+      />
     </div>
   );
 };

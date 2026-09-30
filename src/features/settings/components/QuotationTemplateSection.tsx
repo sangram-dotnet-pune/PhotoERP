@@ -115,7 +115,6 @@ const QuotationTemplateSection = () => {
     DEFAULT_TEMPLATE_SETTINGS,
   );
   const [branding, setBranding] = useState<Branding>(DEFAULT_BRANDING);
-  const [logo, setLogo] = useState('');
   const [studio, setStudio] = useState<StudioSettings>(DEFAULT_STUDIO_SETTINGS);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -142,17 +141,15 @@ const QuotationTemplateSection = () => {
 
   const load = async () => {
     try {
-      const [savedTemplate, logoData, studioData, brandingData] =
+      const [savedTemplate, studioData, brandingData] =
         await Promise.all([
           templateSettingsService.getTemplateSettings(),
-          templateSettingsService.getLogo(),
           settingsService.getStudioSettings(),
           templateSettingsService.getBranding(),
         ]);
 
       setTemplate(savedTemplate);
       setSavedTemplate(savedTemplate);
-      setLogo(logoData);
       setStudio(studioData);
       setBranding(brandingData);
     } catch (error) {
@@ -207,8 +204,8 @@ const QuotationTemplateSection = () => {
   );
 
   const previewQuotation = useMemo(
-    () => buildSampleQuotation(previewTemplate, logo, studio),
-    [previewTemplate, logo, studio],
+    () => buildSampleQuotation(previewTemplate, studio),
+    [previewTemplate, studio],
   );
 
   if (!loaded) {
@@ -354,13 +351,6 @@ const QuotationTemplateSection = () => {
 
           <div className="space-y-2">
             <SectionLabel>Sections</SectionLabel>
-
-            <Toggle
-              label="Show Logo"
-              description="Display the uploaded logo in the header."
-              checked={template.show_logo}
-              onChange={(e) => set('show_logo', e.target.checked)}
-            />
 
             <Toggle
               label="Show Quotation Meta"

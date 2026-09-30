@@ -9,6 +9,7 @@ import {
   TemplateSettings,
   Branding,
 } from '../types/templateSettings';
+import { APPLICATION_LOGO } from '../features/quotations/pdf/decor';
 
 const formatDisplayDate = (iso: string): string => {
   if (!iso) return '';
@@ -98,17 +99,18 @@ export const mapQuotationToPdf = (
     total: quotation.total,
     balance: quotation.balance,
 
+    notes: quotation.notes || '',
+
     studio: {
       name: resolvedStudio.studio_name,
       ownerName: resolvedStudio.owner_name || '',
       phone: resolvedStudio.studio_phone,
       email: resolvedStudio.studio_email,
-      website: resolvedStudio.studio_website,
       address: resolvedStudio.studio_address,
     },
 
     template,
 
-    logo: config?.logo || '',
+    logo: config?.logo || APPLICATION_LOGO,
   };
 };

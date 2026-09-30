@@ -27,7 +27,7 @@ import { exportService, ExportKind } from '../../../services/export.service';
 import type { DatabaseInfo } from '../types/dataManagement.types';
 import SecuritySection from '../../security/components/SecuritySection';
 import BusinessInformationSection from '../components/BusinessInformationSection';
-import LogoBrandingSection from '../components/LogoBrandingSection';
+import BrandingSection from '../components/BrandingSection';
 import QuotationTemplateSection from '../components/QuotationTemplateSection';
 import ServicesPackagesSection from '../components/ServicesPackagesSection';
 
@@ -222,7 +222,7 @@ const DataManagementPage = () => {
 
       <BusinessInformationSection />
 
-      <LogoBrandingSection />
+      <BrandingSection />
 
       <QuotationTemplateSection />
 

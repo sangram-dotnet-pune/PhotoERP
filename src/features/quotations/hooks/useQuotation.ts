@@ -212,7 +212,7 @@ export const useQuotation = () => {
       ...items.map((item, index) => ({
         id: now + index,
         serviceName: item.serviceName,
-        quantity: item.quantity,
+        quantity: 1,
         price: item.price,
       })),
     ]);
@@ -255,7 +255,7 @@ export const useQuotation = () => {
 
   const subtotal = useMemo(() => {
     return services.reduce(
-      (sum, item) => sum + num(item.price) * num(item.quantity),
+      (sum, item) => sum + num(item.price),
       0,
     );
   }, [services]);

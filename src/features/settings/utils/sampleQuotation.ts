@@ -1,6 +1,7 @@
 import type { PdfQuotation } from '../../quotations/pdf/types';
 import type { TemplateSettings } from '../../../types/templateSettings';
 import type { StudioSettings } from '../../../types/settings';
+import { APPLICATION_LOGO } from '../../quotations/pdf/decor';
 
 /**
  * Builds a realistic sample quotation used for the live PDF preview inside the
@@ -8,7 +9,6 @@ import type { StudioSettings } from '../../../types/settings';
  */
 export const buildSampleQuotation = (
   template: TemplateSettings,
-  logo: string,
   studio: StudioSettings,
 ): PdfQuotation => {
   return {
@@ -44,16 +44,17 @@ export const buildSampleQuotation = (
     total: 95000,
     balance: 47500,
 
+    notes: '50% advance required to confirm the booking. Final prices valid for 30 days.',
+
     studio: {
       name: studio.studio_name,
       ownerName: studio.owner_name || '',
       phone: studio.studio_phone,
       email: studio.studio_email,
-      website: studio.studio_website,
       address: studio.studio_address,
     },
 
     template,
-    logo,
+    logo: APPLICATION_LOGO,
   };
 };

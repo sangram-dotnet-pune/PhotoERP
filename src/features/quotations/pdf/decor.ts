@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react';
 
+import photoERP from './logo.png';
+
 import {
   DEFAULT_BRANDING,
   DEFAULT_TEMPLATE_SETTINGS,
@@ -12,6 +14,12 @@ export interface PdfConfig {
   branding: Branding;
   logo: string;
 }
+
+/**
+ * The studio logo is fixed and bundled with the app — it cannot be changed by
+ * the user. Every PDF and preview uses this image.
+ */
+export const APPLICATION_LOGO = photoERP;
 
 /**
  * Merge branding colors on top of template colors so the "Logo & Branding"
@@ -87,5 +95,5 @@ export const buildPdfCssVars = (template: TemplateSettings): CSSProperties => {
 export const DEFAULT_PDF_CONFIG: PdfConfig = {
   template: DEFAULT_TEMPLATE_SETTINGS,
   branding: DEFAULT_BRANDING,
-  logo: '',
+  logo: APPLICATION_LOGO,
 };

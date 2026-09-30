@@ -118,12 +118,19 @@ pub fn run(conn: &Connection) -> Result<(), String> {
 
         CREATE TABLE IF NOT EXISTS expenses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            expense_type TEXT NOT NULL DEFAULT 'Other',
-            note TEXT NOT NULL DEFAULT '',
-            amount REAL NOT NULL DEFAULT 0,
+            quotation_id INTEGER,
             expense_date TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            category TEXT NOT NULL DEFAULT 'Other',
+            description TEXT NOT NULL DEFAULT '',
+            amount REAL NOT NULL DEFAULT 0,
+            payment_method TEXT NOT NULL DEFAULT '',
+            vendor TEXT NOT NULL DEFAULT '',
+            notes TEXT NOT NULL DEFAULT '',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(quotation_id)
+            REFERENCES quotations(id)
+            ON DELETE CASCADE
         );
 
         CREATE TABLE IF NOT EXISTS service_catalog (
@@ -166,6 +173,47 @@ pub fn run(conn: &Connection) -> Result<(), String> {
         ",
     )
     .map_err(|e| format!("Failed to run migrations: {e}"))?;
+
+    // ---------------------------
+    // Upgrade legacy expenses (expense_type/note) to the order-aware schema.
+    // Keeps existing data: legacy category maps to `category`, legacy note maps
+    // to `description`; general expenses get quotation_id = NULL.
+    // ---------------------------
+
+    if table_exists(conn, "expenses")? && !column_exists(conn, "expenses", "category")? {
+        conn.execute_batch(
+            "
+            ALTER TABLE expenses ADD COLUMN quotation_id INTEGER;
+            ALTER TABLE expenses ADD COLUMN category TEXT NOT NULL DEFAULT 'Other';
+            ALTER TABLE expenses ADD COLUMN description TEXT NOT NULL DEFAULT '';
+            ALTER TABLE expenses ADD COLUMN payment_method TEXT NOT NULL DEFAULT '';
+            ALTER TABLE expenses ADD COLUMN vendor TEXT NOT NULL DEFAULT '';
+            ALTER TABLE expenses ADD COLUMN notes TEXT NOT NULL DEFAULT '';
+            ",
+        )
+        .map_err(|e| format!("Failed to upgrade expenses table: {e}"))?;
+
+        // Backfill legacy columns onto the new ones. This only runs in the
+        // same migration pass that just added the columns, so every row still
+        // holds the fresh defaults ('Other' / '') and backs up safely.
+        conn.execute_batch(
+            "
+            UPDATE expenses
+            SET category = IFNULL(expense_type, 'Other'),
+                description = IFNULL(note, '');
+            ",
+        )
+        .map_err(|e| format!("Failed to backfill legacy expenses: {e}"))?;
+    }
+
+    // Index order expenses by quotation. Created here (not in the batch) so
+    // existing databases get it after their legacy upgrade adds the column.
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_expenses_quotation_id
+         ON expenses (quotation_id)",
+        [],
+    )
+    .map_err(|e| format!("Failed to index expenses.quotation_id: {e}"))?;
 
     // ---------------------------
     // Safe additive migration:
@@ -361,6 +409,16 @@ mod tests {
                 notes TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE expenses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                expense_type TEXT NOT NULL DEFAULT 'Other',
+                note TEXT NOT NULL DEFAULT '',
+                amount REAL NOT NULL DEFAULT 0,
+                expense_date TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
             ",
         )
         .unwrap();
@@ -419,6 +477,54 @@ mod tests {
         assert!(column_exists(&conn, "quotations", "event_notes").unwrap());
         assert!(table_exists(&conn, "settings").unwrap());
         assert!(table_exists(&conn, "quotation_sequence").unwrap());
+    }
+
+    #[test]
+    fn upgrades_legacy_expenses_table_without_losing_data() {
+        let conn = legacy_connection();
+
+        conn.execute_batch(
+            "
+            INSERT INTO expenses (expense_type, note, amount, expense_date)
+            VALUES ('Equipment', 'Lenses', 5000, '2026-01-10');
+            INSERT INTO expenses (expense_type, note, amount, expense_date)
+            VALUES ('Person', 'Assistant', 1200, '2026-02-05');
+            ",
+        )
+        .unwrap();
+
+        run(&conn).unwrap();
+        run(&conn).unwrap();
+
+        assert!(column_exists(&conn, "expenses", "category").unwrap());
+        assert!(column_exists(&conn, "expenses", "quotation_id").unwrap());
+
+        let (category, description, amount, quotation_id): (String, String, f64, Option<i64>) = conn
+            .query_row(
+                "SELECT category, description, amount, quotation_id
+                 FROM expenses WHERE expense_type = 'Equipment'",
+                [],
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                    ))
+                },
+            )
+            .unwrap();
+
+        assert_eq!(category, "Equipment");
+        assert_eq!(description, "Lenses");
+        assert_eq!(amount, 5000.0);
+        // General expenses stay unlinked to any quotation.
+        assert_eq!(quotation_id, None);
+
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM expenses", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(count, 2);
     }
 
     #[test]

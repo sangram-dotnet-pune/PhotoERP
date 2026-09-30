@@ -1,8 +1,4 @@
-import {
-  Globe,
-  Mail,
-  Phone,
-} from 'lucide-react';
+import { Mail, Phone } from 'lucide-react';
 
 import {
   FaInstagram,
@@ -13,7 +9,6 @@ import {
 interface FooterProps {
   phone: string;
   email: string;
-  website: string;
   footerText: string;
   showContact: boolean;
 }
@@ -21,7 +16,6 @@ interface FooterProps {
 const Footer = ({
   phone,
   email,
-  website,
   footerText,
   showContact,
 }: FooterProps) => {
@@ -32,18 +26,17 @@ const Footer = ({
           <>
             <div className="footer-contact">
               <div className="footer-row">
-                <Phone size={15} />
+                <div className="footer-icon">
+                  <Phone size={15} />
+                </div>
                 <span>{phone}</span>
               </div>
 
               <div className="footer-row">
-                <Mail size={15} />
+                <div className="footer-icon">
+                  <Mail size={15} />
+                </div>
                 <span>{email}</span>
-              </div>
-
-              <div className="footer-row">
-                <Globe size={15} />
-                <span>{website}</span>
               </div>
             </div>
 

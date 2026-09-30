@@ -148,20 +148,32 @@ tr {
     min-height: 20px;
 }
 
-.address-row {
-    align-items: flex-start;
-}
-
 .contact-row span {
-    line-height: 20px;
+    line-height: 13.5px;
 }
 
+/* Icon container: fixed width/height so every text value starts at the same x
+   position and the icon is vertically centered with its text. */
 .contact-icon {
+    width: 20px;
+    height: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     color: var(--rose);
+
     flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    margin-top: 0;
+    line-height: 0;
+}
+
+.contact-icon svg {
+    width: 16px;
+    height: 16px;
+
+    display: block;
+    flex-shrink: 0;
 }
 
 .quotation-header {
@@ -336,84 +348,69 @@ tr {
     color: var(--muted);
 }
 
-/* Row layout */
+/* Row layout — flex (html2canvas-safe) with fixed columns:
+   24px icon, 88px label, 14px colon, remaining space for the value.
+   Identical widths to the previous grid layout. */
 .event-row {
-    display: grid;
-    grid-template-columns: 24px 88px 14px minmax(0, 1fr);
-
+    display: flex;
     align-items: center;
-
     column-gap: 8px;
-
     min-height: 30px;
     padding: 4px 0;
-
     font-size: 13.5px;
     line-height: 20px;
 }
 
-/* Icon container */
 .event-icon {
-    width: 22px;
+    width: 24px;
     height: 20px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     color: var(--rose);
-
-    line-height: 0;
+    flex-shrink: 0;
+    line-height: 20px;
 }
 
-/* Make every Lucide icon identical */
 .event-icon svg {
     width: 16px;
     height: 16px;
-
     display: block;
-
     flex-shrink: 0;
 }
 
-/* Label */
 .event-label {
     margin: 0;
     padding: 0;
-
     display: block;
-
+    width: 88px;
+    flex-shrink: 0;
     font-weight: 600;
     color: var(--text);
-
     line-height: 20px;
     white-space: nowrap;
 }
 
-/* Colon */
 .event-colon {
     margin: 0;
     padding: 0;
-
     display: block;
-
+    width: 14px;
+    flex-shrink: 0;
     color: #B5AEAC;
-
     text-align: center;
     line-height: 20px;
 }
 
-/* Value */
 .event-value {
     margin: 0;
     padding: 0;
-
     display: block;
-
-    color: var(--muted);
-
-    line-height: 20px;
+    flex: 1;
     min-width: 0;
+    color: var(--muted);
+    line-height: 20px;
+    white-space: pre-line;
 }
 .package-section {
     padding-left:14mm;
@@ -457,6 +454,7 @@ tr {
     padding:14px 20px;
     border-top:1px solid var(--border);
     line-height: 20px;
+    vertical-align: middle;
 }
 
 .icon-column {
@@ -479,15 +477,15 @@ tr {
     color: var(--rose);
 }
 
+.description-column {
+    text-align:center !important;
+}
+
 .service-name {
     font-weight:600;
     color: var(--text);
     font-size: 13.5px;
-}
-
-.service-detail {
-    color: var(--muted);
-    font-size: 13px;
+    text-align:center;
 }
 
 .service-price {
@@ -505,8 +503,14 @@ tr {
 
 .totals-section {
     display:grid;
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:1fr;
     gap:40px;
+    padding-left:14mm;
+    padding-right:14mm;
+    padding-top:10mm;
+}
+
+.terms-section {
     padding-left:14mm;
     padding-right:14mm;
     padding-top:10mm;
@@ -528,6 +532,29 @@ tr {
     font-size:13px;
     line-height:30px;
     color: var(--muted);
+}
+
+.terms-notes-section {
+    padding-left:14mm;
+    padding-right:14mm;
+    padding-top:10mm;
+}
+
+.terms-notes-section h3 {
+    margin-bottom:12px;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color: var(--text);
+}
+
+.terms-notes-section p {
+    margin:0;
+    font-size:13px;
+    line-height:22px;
+    color: var(--muted);
+    white-space: pre-line;
 }
 
 .amount-section {
@@ -613,11 +640,29 @@ tr {
     display:flex;
     align-items:center;
     gap:10px;
-    line-height: 18px;
+    line-height: 13px;
+}
+
+.footer-row span {
+    line-height: 13px;
 }
 
 .footer-row svg {
+    display: block;
+}
+
+/* Icon container: fixed size matches the row line-height so the icon is
+   vertically centered with its text. */
+.footer-icon {
+    width: 18px;
+    height: 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     flex-shrink: 0;
+    line-height: 0;
 }
 
 .social-icons {

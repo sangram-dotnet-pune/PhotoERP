@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Building2,
-  ImageIcon,
+  Palette,
   LayoutTemplate,
   Package,
   ShieldCheck,
@@ -22,7 +22,7 @@ import {
   StudioSettings,
 } from '../../types/settings';
 
-import LogoBrandingSection from '../settings/components/LogoBrandingSection';
+import BrandingSection from '../settings/components/BrandingSection';
 import QuotationTemplateSection from '../settings/components/QuotationTemplateSection';
 import ServicesPackagesSection from '../settings/components/ServicesPackagesSection';
 
@@ -32,7 +32,7 @@ interface SetupWizardProps {
 
 const STEPS = [
   { label: 'Business', icon: Building2 },
-  { label: 'Logo & Branding', icon: ImageIcon },
+  { label: 'Branding', icon: Palette },
   { label: 'Template', icon: LayoutTemplate },
   { label: 'Packages', icon: Package },
   { label: 'Security', icon: ShieldCheck },
@@ -209,7 +209,7 @@ const SetupWizard = ({ onComplete }: SetupWizardProps) => {
                 {step === 0 &&
                   'Tell us about your photography business. This appears on quotation PDFs.'}
                 {step === 1 &&
-                  'Upload your logo and pick brand colors. Save with the buttons inside the card.'}
+                  'Pick the brand colors used across the quotation template. Save with the button inside the card.'}
                 {step === 2 &&
                   'Customize your quotation template. The preview updates live. Save your changes.'}
                 {step === 3 &&
@@ -292,7 +292,7 @@ const SetupWizard = ({ onComplete }: SetupWizardProps) => {
             </div>
           )}
 
-          {step === 1 && <LogoBrandingSection />}
+          {step === 1 && <BrandingSection />}
 
           {step === 2 && <QuotationTemplateSection />}
 

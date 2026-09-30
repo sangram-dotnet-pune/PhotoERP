@@ -15,6 +15,7 @@ import { mapQuotationToPdf } from '../../../utils/pdfMapper';
 
 import generateQuotationPdf from '../pdf/generateQuotationPdf';
 import PdfPreview from '../pdf/PdfPreview';
+import OrderExpensesSection from '../components/OrderExpensesSection';
 import { usePdfConfig } from '../../../hooks/usePdfConfig';
 import { toastError, toastSuccess } from '../../../utils/toast';
 import { WORKFLOW_STATUSES } from '../../../types/settings';
@@ -170,6 +171,8 @@ const ViewQuotationPage = () => {
         onCancel={() => navigate(-1)}
         onEdit={() => navigate(`/quotations/edit/${id}`)}
       />
+
+      {id && <OrderExpensesSection quotationId={Number(id)} />}
 
       <PdfPreview ref={pdfRef} quotation={pdfQuotation} />
     </>

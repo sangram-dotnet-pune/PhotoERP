@@ -87,6 +87,7 @@ const QuotationTemplate = forwardRef<HTMLDivElement, Props>(
               advance={quotation.advance}
               total={quotation.total}
               balance={quotation.balance}
+              notes={quotation.notes}
               template={template}
               studioName={quotation.studio.name}
             />
@@ -97,7 +98,6 @@ const QuotationTemplate = forwardRef<HTMLDivElement, Props>(
               <Footer
                 phone={quotation.studio.phone}
                 email={quotation.studio.email}
-                website={quotation.studio.website}
                 footerText={template.footer_text}
                 showContact={template.footer_contact}
               />

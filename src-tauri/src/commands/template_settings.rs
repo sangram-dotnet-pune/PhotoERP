@@ -1,5 +1,3 @@
-use base64::engine::general_purpose::STANDARD as BASE64;
-use base64::Engine as _;
 use rusqlite::{params, Connection};
 use tauri::AppHandle;
 
@@ -11,9 +9,6 @@ use crate::{
 
 const KEY_BRANDING: &str = "app_branding";
 const KEY_TEMPLATE: &str = "app_template";
-const KEY_LOGO: &str = "logo_data";
-
-const MAX_LOGO_BYTES: u64 = 3 * 1024 * 1024;
 
 fn read_setting(conn: &Connection, key: &str, fallback: &str) -> String {
     conn.query_row(
@@ -162,69 +157,6 @@ pub fn save_branding(app: AppHandle, branding: Branding) -> Result<(), String> {
     save_branding_core(&conn, &branding)
 }
 
-#[tauri::command]
-pub fn get_logo(app: AppHandle) -> Result<String, String> {
-    let conn = connection::get_connection(&app)?;
-
-    Ok(read_setting(&conn, KEY_LOGO, ""))
-}
-
-#[tauri::command]
-pub fn clear_logo(app: AppHandle) -> Result<(), String> {
-    let conn = connection::get_connection(&app)?;
-
-    write_setting(&conn, KEY_LOGO, "")
-}
-
-fn mime_for_path(path: &str) -> Option<&'static str> {
-    let lower = path.to_lowercase();
-
-    if lower.ends_with(".png") {
-        Some("image/png")
-    } else if lower.ends_with(".jpg") || lower.ends_with(".jpeg") {
-        Some("image/jpeg")
-    } else if lower.ends_with(".webp") {
-        Some("image/webp")
-    } else if lower.ends_with(".gif") {
-        Some("image/gif")
-    } else if lower.ends_with(".svg") {
-        Some("image/svg+xml")
-    } else {
-        None
-    }
-}
-
-fn save_logo_from_path_core(conn: &Connection, path: &str) -> Result<(), String> {
-    let mime = mime_for_path(path)
-        .ok_or_else(|| "Logo must be a PNG, JPG, WEBP, GIF or SVG image.".to_string())?;
-
-    let metadata = std::fs::metadata(path)
-        .map_err(|e| format!("Failed to read logo file: {e}"))?;
-
-    if metadata.len() > MAX_LOGO_BYTES {
-        return Err("Logo image is too large. Maximum size is 3 MB.".to_string());
-    }
-
-    let bytes = std::fs::read(path)
-        .map_err(|e| format!("Failed to read logo file: {e}"))?;
-
-    if bytes.is_empty() {
-        return Err("Logo file is empty.".to_string());
-    }
-
-    let encoded = BASE64.encode(bytes);
-    let data_url = format!("data:{mime};base64,{encoded}");
-
-    write_setting(conn, KEY_LOGO, &data_url)
-}
-
-#[tauri::command]
-pub fn save_logo_from_path(app: AppHandle, path: String) -> Result<(), String> {
-    let conn = connection::get_connection(&app)?;
-
-    save_logo_from_path_core(&conn, &path)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -289,35 +221,5 @@ mod tests {
         let mut bad = custom.clone();
         bad.primary_color = "nope".to_string();
         assert!(save_branding_core(&conn, &bad).is_err());
-    }
-
-    #[test]
-    fn logo_is_stored_as_data_url_only_for_valid_images() {
-        let conn = crate::test_support::test_connection();
-
-        assert_eq!(read_setting(&conn, KEY_LOGO, ""), "");
-
-        // Write a tiny valid png to a temp file.
-        let png_bytes = vec![
-            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
-        ];
-
-        let mut path = std::env::temp_dir();
-        path.push("photoerp_test_logo.png");
-        std::fs::write(&path, &png_bytes).unwrap();
-
-        save_logo_from_path_core(&conn, path.to_str().unwrap()).unwrap();
-
-        let stored = read_setting(&conn, KEY_LOGO, "");
-        assert!(stored.starts_with("data:image/png;base64,"));
-
-        let unsupported = std::env::temp_dir().join("photoerp_test_logo.txt");
-        std::fs::write(&unsupported, b"hello").unwrap();
-
-        assert!(save_logo_from_path_core(&conn, unsupported.to_str().unwrap()).is_err());
-        assert!(save_logo_from_path_core(&conn, "/definitely/not/a/file.png").is_err());
-
-        std::fs::remove_file(path).ok();
-        std::fs::remove_file(unsupported).ok();
     }
 }

@@ -7,14 +7,16 @@ import {
   StudioSettings,
 } from '../types/settings';
 import {
+  APPLICATION_LOGO,
   DEFAULT_PDF_CONFIG,
   PdfConfig,
 } from '../features/quotations/pdf/decor';
 
 /**
- * Loads everything the quotation PDF needs (studio details, template styling,
- * branding colors and the uploaded logo) once, bundled into a single config.
- * Falls back to sensible defaults so PDF generation always works.
+ * Loads everything the quotation PDF needs (studio details, template styling
+ * and branding colors) once, bundled into a single config. The logo is fixed
+ * and bundled with the app. Falls back to sensible defaults so PDF generation
+ * always works.
  */
 export const usePdfConfig = (): {
   config: PdfConfig;
@@ -27,18 +29,17 @@ export const usePdfConfig = (): {
 
   const refresh = useCallback(async () => {
     try {
-      const [settings, template, branding, logo] = await Promise.all([
+      const [settings, template, branding] = await Promise.all([
         settingsService.getStudioSettings(),
         templateSettingsService.getTemplateSettings(),
         templateSettingsService.getBranding(),
-        templateSettingsService.getLogo(),
       ]);
 
       setStudio(settings);
       setConfig({
         template,
         branding,
-        logo,
+        logo: APPLICATION_LOGO,
       });
     } catch (error) {
       console.error('Failed to load PDF config', error);

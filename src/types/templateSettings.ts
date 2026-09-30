@@ -37,7 +37,6 @@ export interface TemplateSettings {
   background_color: string;
   header_style: HeaderStyle;
   quotation_title: string;
-  show_logo: boolean;
   show_quotation_meta: boolean;
   show_client_section: boolean;
   show_event_section: boolean;
@@ -71,7 +70,6 @@ export const DEFAULT_TEMPLATE_SETTINGS: TemplateSettings = {
   background_color: '#F8F3E8',
   header_style: 'classic',
   quotation_title: 'QUOTATION',
-  show_logo: true,
   show_quotation_meta: true,
   show_client_section: true,
   show_event_section: true,

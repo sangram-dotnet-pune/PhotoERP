@@ -6,6 +6,7 @@ interface TotalsSectionProps {
   advance: number;
   total: number;
   balance: number;
+  notes: string;
   template: TemplateSettings;
   studioName: string;
 }
@@ -15,6 +16,7 @@ const TotalsSection = ({
   advance,
   total,
   balance,
+  notes,
   template,
   studioName,
 }: TotalsSectionProps) => {
@@ -23,22 +25,12 @@ const TotalsSection = ({
     .map((term) => term.trim())
     .filter(Boolean);
 
+  const trimmedNotes = notes.trim();
+
   return (
     <>
       {template.show_totals_section && (
         <section className="totals-section">
-          {template.show_terms && (
-            <div className="terms-section">
-              <h3>TERMS &amp; CONDITIONS</h3>
-
-              <ul>
-                {terms.map((term, index) => (
-                  <li key={index}>{term}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           <div className="amount-section">
             <div className="amount-row">
               <span>Subtotal</span>
@@ -62,6 +54,26 @@ const TotalsSection = ({
               </div>
             </div>
           </div>
+        </section>
+      )}
+
+      {trimmedNotes && (
+        <section className="terms-notes-section">
+          <h3>DELIVERABLES FROM US</h3>
+
+          <p>{notes}</p>
+        </section>
+      )}
+
+      {template.show_terms && (
+        <section className="terms-section">
+          <h3>TERMS &amp; CONDITIONS</h3>
+
+          <ul>
+            {terms.map((term, index) => (
+              <li key={index}>{term}</li>
+            ))}
+          </ul>
         </section>
       )}
 

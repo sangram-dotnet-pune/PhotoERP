@@ -23,18 +23,6 @@ class TemplateSettingsService {
   async saveBranding(branding: Branding): Promise<void> {
     return invoke<void>('save_branding', { branding });
   }
-
-  async getLogo(): Promise<string> {
-    return invoke<string>('get_logo');
-  }
-
-  async saveLogoFromPath(path: string): Promise<void> {
-    return invoke<void>('save_logo_from_path', { path });
-  }
-
-  async clearLogo(): Promise<void> {
-    return invoke<void>('clear_logo');
-  }
 }
 
 export const templateSettingsService = new TemplateSettingsService();

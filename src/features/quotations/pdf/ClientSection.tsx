@@ -36,19 +36,25 @@ const ClientSection = ({
       <div className="client-contact">
 
         <div className="contact-row">
-          <Phone size={16} className="contact-icon" />
+          <div className="contact-icon">
+            <Phone size={16} />
+          </div>
           <span>{client.phone}</span>
         </div>
 
 
         <div className="contact-row">
-          <Mail size={16} className="contact-icon" />
+          <div className="contact-icon">
+            <Mail size={16} />
+          </div>
           <span>{client.email}</span>
         </div>
 
 
         <div className="contact-row address-row">
-          <MapPin size={16} className="contact-icon" />
+          <div className="contact-icon">
+            <MapPin size={16} />
+          </div>
           <span>{client.address}</span>
         </div>
 
