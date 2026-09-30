@@ -524,7 +524,7 @@ const TotalsSection = ({
               <section className="totals-section">
                 <div className="amount-section">
                   <div className="amount-row">
-                    <span>Subtotal</span>
+                    <span>Total after discount</span>
                     <strong>₹ {total.toLocaleString('en-IN')}</strong>
                   </div>
 
