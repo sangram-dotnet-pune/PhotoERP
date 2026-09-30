@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 
 import Button from '../../../components/ui/Button';
 
-import QuotationTemplate from '../pdf/QuotationTemplate';
+import QuotationTemplate from '../pdf/quotationTemplate';
 
 import { quotationService } from '../../../services/quotation.service';
 

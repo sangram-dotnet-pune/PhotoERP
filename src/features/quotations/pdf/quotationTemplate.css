@@ -12,6 +12,18 @@
 
     --font-main: 'Poppins', Arial, sans-serif;
     --font-script: 'Dancing Script', cursive;
+
+    /* Calibration knob: shifts all icon-row text vertically in the PDF.
+       If text looks 1-2px high/low next to its icon, try 1px or -1px. */
+    --pdf-text-nudge: 0px;
+}
+
+/* Applied only on the clone html2canvas captures (see onclone in
+   generateQuotationPdf.ts). Lifts text up to match the icons.
+   Measured offset in the exported PDF is ~7px. If text is still low,
+   use -8px / -9px; if now too high, use -6px / -5px. */
+.pdf-capture {
+    --pdf-text-nudge: -7px;
 }
 
 *,
@@ -100,6 +112,56 @@ tr {
     z-index: auto;
 }
 
+/* =========================
+   SHARED ICON + TEXT ROW
+   (html2canvas-safe: top-aligned, icon box and text
+   share the same 20px height, no vertical centering)
+========================= */
+
+.icon-row,
+.event-row {
+    display: flex;
+    align-items: flex-start;
+    column-gap: 10px;
+    font-size: 13.5px;
+    line-height: 20px;
+}
+
+.icon-box {
+    display: block;
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+}
+
+.icon-box img {
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin: 2px; /* (20 - 16) / 2 */
+}
+
+.icon-text,
+.event-label,
+.event-colon,
+.event-value {
+    display: block;
+    margin: 0;
+    padding: 0;
+    line-height: 20px;
+    position: relative;
+    top: var(--pdf-text-nudge);
+}
+
+.icon-text {
+    min-width: 0;
+    word-break: break-word;
+}
+
+/* =========================
+   CLIENT
+========================= */
+
 .client-event-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -137,43 +199,7 @@ tr {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    font-size: 13.5px;
     color: var(--text);
-}
-
-.contact-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 20px;
-}
-
-.contact-row span {
-    line-height: 13.5px;
-}
-
-/* Icon container: fixed width/height so every text value starts at the same x
-   position and the icon is vertically centered with its text. */
-.contact-icon {
-    width: 20px;
-    height: 20px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    color: var(--rose);
-
-    flex-shrink: 0;
-    line-height: 0;
-}
-
-.contact-icon svg {
-    width: 16px;
-    height: 16px;
-
-    display: block;
-    flex-shrink: 0;
 }
 
 .quotation-header {
@@ -295,6 +321,11 @@ tr {
     display:block;
 }
 
+/* =========================
+   META BLOCK
+   (grid keeps every colon on one vertical line)
+========================= */
+
 .quotation-meta {
     margin-top: 8mm;
     padding-left: 14mm;
@@ -302,35 +333,36 @@ tr {
 }
 
 .meta-list {
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    font-size:13.5px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13.5px;
 }
 
 .meta-row {
-    display:flex;
-    align-items:center;
+    display: grid;
+    grid-template-columns: 30mm 12px 1fr;
+    align-items: start;
     line-height: 20px;
 }
 
 .meta-label {
-    width:28mm;
-    font-weight:600;
+    font-weight: 600;
     color: var(--text);
     letter-spacing: 0.4px;
+    white-space: nowrap;
 }
 
 .meta-colon {
-    margin-right:10px;
+    text-align: center;
     color: var(--muted);
-    width: 2px;
 }
 
 .meta-value {
     color: var(--muted);
     font-weight: 400;
 }
+
 /* =========================
    EVENT DETAILS
 ========================= */
@@ -348,70 +380,36 @@ tr {
     color: var(--muted);
 }
 
-/* Row layout — flex (html2canvas-safe) with fixed columns:
-   24px icon, 88px label, 14px colon, remaining space for the value.
-   Identical widths to the previous grid layout. */
 .event-row {
-    display: flex;
-    align-items: center;
-    column-gap: 8px;
-    min-height: 30px;
     padding: 4px 0;
-    font-size: 13.5px;
-    line-height: 20px;
-}
-
-.event-icon {
-    width: 24px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--rose);
-    flex-shrink: 0;
-    line-height: 20px;
-}
-
-.event-icon svg {
-    width: 16px;
-    height: 16px;
-    display: block;
-    flex-shrink: 0;
 }
 
 .event-label {
-    margin: 0;
-    padding: 0;
-    display: block;
     width: 88px;
     flex-shrink: 0;
     font-weight: 600;
     color: var(--text);
-    line-height: 20px;
     white-space: nowrap;
 }
 
 .event-colon {
-    margin: 0;
-    padding: 0;
-    display: block;
     width: 14px;
     flex-shrink: 0;
-    color: #B5AEAC;
     text-align: center;
-    line-height: 20px;
+    color: #B5AEAC;
 }
 
 .event-value {
-    margin: 0;
-    padding: 0;
-    display: block;
     flex: 1;
     min-width: 0;
     color: var(--muted);
-    line-height: 20px;
     white-space: pre-line;
 }
+
+/* =========================
+   PACKAGE TABLE
+========================= */
+
 .package-section {
     padding-left:14mm;
     padding-right:14mm;
@@ -501,19 +499,44 @@ tr {
     color: var(--muted);
 }
 
+/* =========================
+   TOTALS / TERMS / NOTES
+========================= */
+
+.totals-layout {
+    display: flex;
+    align-items: flex-start;
+    column-gap: 12mm;
+    padding-left: 14mm;
+    padding-right: 14mm;
+    padding-top: 10mm;
+}
+
+.totals-column-left {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.totals-column-right {
+    flex: 0 0 70mm;
+}
+
 .totals-section {
-    display:grid;
-    grid-template-columns:1fr;
-    gap:40px;
-    padding-left:14mm;
-    padding-right:14mm;
-    padding-top:10mm;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
 }
 
 .terms-section {
-    padding-left:14mm;
-    padding-right:14mm;
-    padding-top:10mm;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+}
+
+/* Terms only get their own top gap when they follow the deliverables block,
+   so they stay aligned with the summary column when notes are hidden. */
+.terms-notes-section + .terms-section {
+    padding-top: 10mm;
 }
 
 .terms-section h3 {
@@ -535,9 +558,9 @@ tr {
 }
 
 .terms-notes-section {
-    padding-left:14mm;
-    padding-right:14mm;
-    padding-top:10mm;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
 }
 
 .terms-notes-section h3 {
@@ -615,6 +638,10 @@ tr {
     letter-spacing:0.5px;
 }
 
+/* =========================
+   FOOTER
+========================= */
+
 .quotation-footer {
     margin-top:14mm;
     background: var(--rose);
@@ -636,33 +663,9 @@ tr {
     font-size:13px;
 }
 
-.footer-row {
-    display:flex;
-    align-items:center;
-    gap:10px;
-    line-height: 13px;
-}
-
-.footer-row span {
-    line-height: 13px;
-}
-
-.footer-row svg {
-    display: block;
-}
-
-/* Icon container: fixed size matches the row line-height so the icon is
-   vertically centered with its text. */
-.footer-icon {
-    width: 18px;
-    height: 18px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-    line-height: 0;
+.footer-contact .icon-row {
+    font-size: 13px;
+    color: white;
 }
 
 .social-icons {
@@ -679,6 +682,10 @@ tr {
     justify-content:center;
     border-radius:50%;
     border:1px solid rgba(255,255,255,.7);
+}
+
+.social-circle svg {
+    display: block;
 }
 
 .thank-you {

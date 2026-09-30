@@ -14,7 +14,7 @@ import {
   toastLoading,
   toastDismiss,
 } from '../../../utils/toast';
-import QuotationTemplate from '../../quotations/pdf/QuotationTemplate';
+import QuotationTemplate from '../../quotations/pdf/quotationTemplate';
 import { resolveTemplateColors } from '../../quotations/pdf/decor';
 import { buildSampleQuotation } from '../utils/sampleQuotation';
 

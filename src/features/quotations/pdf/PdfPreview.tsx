@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 
-import QuotationTemplate from './QuotationTemplate';
+import QuotationTemplate from './quotationTemplate';
 
 import type { PdfQuotation } from './types';
 
